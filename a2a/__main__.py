@@ -1,3 +1,5 @@
+import os
+
 import uvicorn
 
 from a2a.server.request_handlers import DefaultRequestHandler
@@ -19,6 +21,8 @@ from starlette.applications import Starlette
 
 
 if __name__ == '__main__':
+    public_url = os.getenv('A2A_PUBLIC_URL', 'http://127.0.0.1:9999')
+
     skill_lookup = AgentSkill(
         id='lookup_brief',
         name='Opzoeken van brieven',
@@ -82,7 +86,7 @@ if __name__ == '__main__':
         supported_interfaces=[
             AgentInterface(
                 protocol_binding='JSONRPC',
-                url='http://127.0.0.1:9999',
+                url=public_url,
             )
         ],
         skills=[skill_lookup, skill_address_check],
@@ -101,7 +105,7 @@ if __name__ == '__main__':
         supported_interfaces=[
             AgentInterface(
                 protocol_binding='JSONRPC',
-                url='http://127.0.0.1:9999',
+                url=public_url,
             )
         ],
         skills=[skill_lookup, skill_filter, skill_address_check],
@@ -119,4 +123,8 @@ if __name__ == '__main__':
     routes.extend(create_jsonrpc_routes(request_handler, '/'))
 
     app = Starlette(routes=routes)
-    uvicorn.run(app, host='127.0.0.1', port=9999)
+    uvicorn.run(
+        app,
+        host=os.getenv('A2A_HOST', '127.0.0.1'),
+        port=int(os.getenv('A2A_PORT', '9999')),
+    )
