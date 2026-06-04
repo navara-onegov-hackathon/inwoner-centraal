@@ -1,4 +1,4 @@
-import { Check, FileText, ChevronRight } from 'lucide-react';
+import { Check, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
 export function StepPlan() {

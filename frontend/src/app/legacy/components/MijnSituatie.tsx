@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DataCorrectionWidget } from './DataCorrectionWidget';
 import { GovernmentToggle } from './GovernmentToggle';
 import { StappenplanPanel } from './StappenplanPanel';
 
@@ -142,6 +143,8 @@ export function MijnSituatie({ onNavigate }: MijnSituatieProps) {
           </section>
         </div>
       </div>
+
+      <DataCorrectionWidget />
 
       <h2 className="mb-6 text-[2rem] font-bold leading-tight text-gray-900">Stappenplan</h2>
       <StappenplanPanel />
