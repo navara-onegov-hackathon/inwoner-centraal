@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   BEGELEIDING_STORAGE_KEY,
   DEFAULT_BEGELEIDING,
+  DEFAULT_GEGEVENS,
+  GEGEVENS_STORAGE_KEY,
   ONBOARDING_STORAGE_KEY,
-  POSTADRES_STORAGE_KEY,
+  normalizeGegevensProfiel,
   type BegeleidingsVoorkeur,
-  type PostadresKeuze,
+  type GegevensProfiel,
 } from '../types/begeleiding';
 
 export function useOnboarding() {
@@ -14,9 +16,9 @@ export function useOnboarding() {
     return window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true';
   });
 
-  const complete = useCallback((postadresKeuze: PostadresKeuze) => {
+  const complete = useCallback((gegevens: GegevensProfiel) => {
     window.localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
-    window.localStorage.setItem(POSTADRES_STORAGE_KEY, postadresKeuze);
+    window.localStorage.setItem(GEGEVENS_STORAGE_KEY, JSON.stringify(gegevens));
     setCompleted(true);
   }, []);
 
@@ -28,14 +30,19 @@ export function useOnboarding() {
   return { completed, complete, reset };
 }
 
-export function usePostadresKeuze() {
-  const [keuze, setKeuze] = useState<PostadresKeuze | null>(() => {
-    if (typeof window === 'undefined') return null;
-    const stored = window.localStorage.getItem(POSTADRES_STORAGE_KEY);
-    return stored as PostadresKeuze | null;
+export function useGegevensProfiel() {
+  const [gegevens, setGegevens] = useState<GegevensProfiel>(() => {
+    if (typeof window === 'undefined') return DEFAULT_GEGEVENS;
+    try {
+      const stored = window.localStorage.getItem(GEGEVENS_STORAGE_KEY);
+      if (stored) return normalizeGegevensProfiel(JSON.parse(stored));
+    } catch {
+      /* use default */
+    }
+    return DEFAULT_GEGEVENS;
   });
 
-  return { postadresKeuze: keuze, setPostadresKeuze: setKeuze };
+  return { gegevens, setGegevens };
 }
 
 export function useBegeleidingsVoorkeur() {

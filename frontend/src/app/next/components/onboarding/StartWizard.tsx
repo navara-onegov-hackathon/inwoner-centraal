@@ -1,34 +1,40 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
-import type { PersonaContext } from '../../types/overzicht';
 import {
   DEFAULT_BEGELEIDING,
+  DEFAULT_GEGEVENS,
   type BegeleidingsVoorkeur,
-  type PostadresKeuze,
+  type GegevensProfiel,
 } from '../../types/begeleiding';
+import { AgentPlanStep } from './steps/AgentPlanStep';
 import { BegeleidingStep } from './steps/BegeleidingStep';
 import { CondoleanceStep } from './steps/CondoleanceStep';
-import { PostadresStep } from './steps/PostadresStep';
-import { ReviewStep } from './steps/ReviewStep';
+import { DelegatieAfgerondStep } from './steps/DelegatieAfgerondStep';
+import { DelegatieStep } from './steps/DelegatieStep';
+import { VerifyGegevensStep } from './steps/VerifyGegevensStep';
+import type { PersonaContext } from '../../types/overzicht';
 
 interface StartWizardProps {
   persona: PersonaContext;
   initialVoorkeur: BegeleidingsVoorkeur;
   onVoorkeurChange: (v: BegeleidingsVoorkeur) => void;
-  onComplete: (postadresKeuze: PostadresKeuze) => void;
+  onComplete: (gegevens: GegevensProfiel) => void;
+  onRestartDemo: () => void;
 }
 
-const STEPS = ['condoleance', 'begeleiding', 'postadres', 'review'] as const;
+const STEPS = ['condoleance', 'delegatie', 'begeleiding', 'agentPlan', 'verifyGegevens'] as const;
 
 export function StartWizard({
   persona,
   initialVoorkeur,
   onVoorkeurChange,
   onComplete,
+  onRestartDemo,
 }: StartWizardProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [voorkeur, setVoorkeur] = useState<BegeleidingsVoorkeur>(initialVoorkeur);
-  const [postadresKeuze, setPostadresKeuze] = useState<PostadresKeuze>('later');
+  const [gegevens, setGegevens] = useState<GegevensProfiel>(DEFAULT_GEGEVENS);
+  const [delegatedTo, setDelegatedTo] = useState<string | null>(null);
 
   const step = STEPS[stepIndex];
 
@@ -39,6 +45,12 @@ export function StartWizard({
 
   const next = () => setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
   const back = () => setStepIndex((i) => Math.max(i - 1, 0));
+
+  if (delegatedTo) {
+    return (
+      <DelegatieAfgerondStep delegateName={delegatedTo} onRestartDemo={onRestartDemo} />
+    );
+  }
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-4.5rem)] max-w-2xl flex-col px-6 py-10">
@@ -66,6 +78,13 @@ export function StartWizard({
             {step === 'condoleance' && (
               <CondoleanceStep persona={persona} onNext={next} />
             )}
+            {step === 'delegatie' && (
+              <DelegatieStep
+                onSelfContinue={next}
+                onDelegate={setDelegatedTo}
+                onBack={back}
+              />
+            )}
             {step === 'begeleiding' && (
               <BegeleidingStep
                 voorkeur={voorkeur}
@@ -74,21 +93,15 @@ export function StartWizard({
                 onBack={back}
               />
             )}
-            {step === 'postadres' && (
-              <PostadresStep
-                persona={persona}
-                keuze={postadresKeuze}
-                onChange={setPostadresKeuze}
-                onNext={next}
-                onBack={back}
-              />
+            {step === 'agentPlan' && (
+              <AgentPlanStep voorkeur={voorkeur} onNext={next} onBack={back} />
             )}
-            {step === 'review' && (
-              <ReviewStep
-                voorkeur={voorkeur}
-                postadresKeuze={postadresKeuze}
+            {step === 'verifyGegevens' && (
+              <VerifyGegevensStep
+                gegevens={gegevens}
+                onChange={setGegevens}
                 onBack={back}
-                onComplete={() => onComplete(postadresKeuze)}
+                onComplete={() => onComplete(gegevens)}
               />
             )}
           </motion.div>
