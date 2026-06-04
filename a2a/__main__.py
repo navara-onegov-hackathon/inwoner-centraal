@@ -13,67 +13,73 @@ from a2a.types import (
     AgentSkill,
 )
 from agent_executor import (
-    HelloWorldAgentExecutor,  # type: ignore[import-untyped]
+    BelastingdienstAgentExecutor,  # type: ignore[import-untyped]
 )
 from starlette.applications import Starlette
 
 
 if __name__ == '__main__':
-    # --8<-- [start:AgentSkill]
-    # Defines the abilities or functions that agent can perform.
-    skill = AgentSkill(
-        id='llm_chat',
-        name='LLM Chat',
-        description='Answers questions and carries out tasks using the GreenPT gemma4 language model.',
-        input_modes=['text/plain'],
-        output_modes=['text/plain'],
-        tags=['a2a', 'llm', 'greenpt'],
-        examples=['What is the capital of France?', 'Summarise this text for me.'],
-    )
-    # --8<-- [end:AgentSkill]
-    # Defines an optional additional skill for the agent that is not visible in the public card.
-    extended_skill = AgentSkill(
-        id='llm_chat_extended',
-        name='LLM Chat (Extended)',
-        description='Extended LLM chat capabilities for authenticated users.',
-        tags=['a2a', 'llm', 'greenpt', 'extended'],
-        examples=['Write a detailed report on...', 'Help me debug this code.'],
+    skill_lookup = AgentSkill(
+        id='lookup_brief',
+        name='Opzoeken van brieven',
+        description=(
+            'Zoek alle brieven op voor een BSN of haal één specifieke brief op via het URN-id. '
+            'Invoer is JSON: {"bsn": "<bsn>", "query": "<vraag>"}.'
+        ),
+        input_modes=['application/json'],
+        output_modes=['application/json'],
+        tags=['belastingdienst', 'brieven', 'lookup'],
+        examples=[
+            '{"bsn": "100407560", "query": "Geef alle brieven voor dit BSN"}',
+            '{"bsn": "", "query": "Geef brief urn:brief:test:06814417-374d-450d-8f22-7452896b4bc3"}',
+        ],
     )
 
-    # --8<-- [start:AgentCard]
-    # Define a public-facing agent card that allows clients to discover your agent's capabilities.
+    skill_filter = AgentSkill(
+        id='filter_brieven',
+        name='Filteren van brieven',
+        description=(
+            'Filter brieven voor een BSN op basis van actie-vereiste, type of brief_code. '
+            'Invoer is JSON: {"bsn": "<bsn>", "query": "<filtervraag>"}.'
+        ),
+        input_modes=['application/json'],
+        output_modes=['application/json'],
+        tags=['belastingdienst', 'brieven', 'filter'],
+        examples=[
+            '{"bsn": "100407560", "query": "Welke brieven vereisen actie?"}',
+            '{"bsn": "105593199", "query": "Geef alleen de terugvorderingen"}',
+            '{"bsn": "105312605", "query": "Brieven met code TOESLAGEN.HERZIENE-BESCHIKKING-ZORG"}',
+        ],
+    )
+
     public_agent_card = AgentCard(
-        # Basic identity information of A2A server
-        name='Inwoner Centraal Agent',  # Identity
-        description='An LLM-powered agent using GreenPT (gemma4).',
+        name='Belastingdienst Brieven Agent',
+        description=(
+            'Een agent die correspondentie van de Belastingdienst opzoekt en filtert '
+            'voor nabestaanden en partners van overledenen.'
+        ),
         version='0.1.0',
-        # Default Media Types for the agent's interactions
-        default_input_modes=['text/plain'],  # Supported media types
-        default_output_modes=['text/plain'],
-        # Supported A2A features (like streaming or extended config)
+        default_input_modes=['application/json'],
+        default_output_modes=['application/json'],
         capabilities=AgentCapabilities(streaming=True, extended_agent_card=True),
-        # Ordered list of endpoints and protocols where the service can be reached
         supported_interfaces=[
             AgentInterface(
                 protocol_binding='JSONRPC',
                 url='http://127.0.0.1:9999',
             )
         ],
-        # The list of AgentSkill objects that this agent offers
-        skills=[skill],
-        # Optional attributes (omitted here for simplicity):
-        # icon_url                         -> A URL to an icon representing the agent
+        skills=[skill_lookup],
     )
-    # --8<-- [end:AgentCard]
 
-    # Defines the authenticated extended agent card with
-    # extended skills that are visible only to authenticated users
     extended_agent_card = AgentCard(
-        name='Inwoner Centraal Agent (Extended)',
-        description='Full-featured LLM agent for authenticated users.',
+        name='Belastingdienst Brieven Agent (Extended)',
+        description=(
+            'Volledige toegang tot opzoek- en filterfuncties voor Belastingdienst-brieven '
+            'voor geauthenticeerde gebruikers.'
+        ),
         version='0.1.0',
-        default_input_modes=['text/plain'],
-        default_output_modes=['text/plain'],
+        default_input_modes=['application/json'],
+        default_output_modes=['application/json'],
         capabilities=AgentCapabilities(streaming=True, extended_agent_card=True),
         supported_interfaces=[
             AgentInterface(
@@ -81,46 +87,19 @@ if __name__ == '__main__':
                 url='http://127.0.0.1:9999',
             )
         ],
-        skills=[
-            skill,
-            extended_skill,
-        ],  # Both skills for the extended card
+        skills=[skill_lookup, skill_filter],
     )
-    # --8<-- [start:RequestHandler]
-    # The RequestHandler processes incoming requests and manages tasks
+
     request_handler = DefaultRequestHandler(
-        # Agent executor handles the execution of the client requests
-        agent_executor=HelloWorldAgentExecutor(),
-        # The task_store is used to store and manage tasks
+        agent_executor=BelastingdienstAgentExecutor(),
         task_store=InMemoryTaskStore(),
-        # Public agent card for unauthenticated users
         agent_card=public_agent_card,
-        # Extended agent card for authenticated users
         extended_agent_card=extended_agent_card,
     )
-    # --8<-- [end:RequestHandler]
-    # --8<-- [start:ServerRoutes]
-    # Creating the routes for the A2A server
-    # These routes handle the incoming requests from the clients
-    # and the outgoing responses to the clients
+
     routes = []
-
-    # Create routes for the agent card
     routes.extend(create_agent_card_routes(public_agent_card))
-
-    # Create routes for the JSONRPC protocol
-    # Alternatively, you can choose GRPC or HTTP_JSON as protocol bindings
-    # based on your requirements
     routes.extend(create_jsonrpc_routes(request_handler, '/'))
-    # --8<-- [end:ServerRoutes]
-    # --8<-- [start:AppServer]
 
-    # Create a web app with the defined routes
-    # Here we are using Starlette, a lightweight ASGI web framework to serve the agent
-    # Alternatively, you can choose FastAPI or other ASGI frameworks
     app = Starlette(routes=routes)
-
-    # Run the app
-    # Uvicorn is a production-ready ASGI HTTP server
     uvicorn.run(app, host='127.0.0.1', port=9999)
-    # --8<-- [end:AppServer]
