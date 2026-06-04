@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { AppVersion } from '../shared/hooks/useAppVersion';
 import { AppHeader } from '../shared/components/AppHeader';
 import { NextShell } from './components/layout/NextShell';
-import { HomePage } from './components/pages/HomePage';
+import { StartWizard } from './components/onboarding/StartWizard';
+import { OverzichtPage } from './components/pages/OverzichtPage';
+import { useBegeleidingsVoorkeur, useOnboarding } from './hooks/useBegeleiding';
+import { mockOverzicht } from './api/mockOverzicht';
 
 interface NextAppProps {
   version: AppVersion;
@@ -11,6 +14,9 @@ interface NextAppProps {
 
 export function NextApp({ version, onVersionChange }: NextAppProps) {
   const [loggedOut, setLoggedOut] = useState(false);
+  const { completed, complete, reset } = useOnboarding();
+  const { voorkeur, setVoorkeur } = useBegeleidingsVoorkeur();
+  const persona = useMemo(() => mockOverzicht().persona, []);
 
   if (loggedOut) {
     return (
@@ -43,9 +49,22 @@ export function NextApp({ version, onVersionChange }: NextAppProps) {
         version={version}
         onVersionChange={onVersionChange}
         onLogout={() => setLoggedOut(true)}
+        begeleidingVoorkeur={completed ? voorkeur : undefined}
+        onBegeleidingChange={setVoorkeur}
+        onResetOnboarding={reset}
+        showVersionToggle={completed}
       />
       <NextShell>
-        <HomePage />
+        {!completed ? (
+          <StartWizard
+            persona={persona}
+            initialVoorkeur={voorkeur}
+            onVoorkeurChange={setVoorkeur}
+            onComplete={complete}
+          />
+        ) : (
+          <OverzichtPage voorkeur={voorkeur} />
+        )}
       </NextShell>
     </div>
   );

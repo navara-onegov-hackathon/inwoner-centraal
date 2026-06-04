@@ -9,7 +9,7 @@ export function UserMenu({ onLogout }: UserMenuProps) {
     <div className="flex items-center gap-5 text-sm">
       <div className="flex items-center gap-2 text-gray-900">
         <User className="h-5 w-5 text-gray-600" strokeWidth={1.75} />
-        <span className="font-semibold">Froukje</span>
+        <span className="font-semibold">Truus</span>
       </div>
       <button
         type="button"
