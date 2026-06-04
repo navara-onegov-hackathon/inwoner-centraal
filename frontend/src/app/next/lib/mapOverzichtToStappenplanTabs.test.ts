@@ -4,7 +4,7 @@ import type { TruusCeesFixture } from '../types/fixture';
 import { DEFAULT_BEGELEIDING } from '../types/begeleiding';
 import { deriveOverzicht } from './deriveOverzicht';
 import { partitionOverzicht } from './partitionOverzicht';
-import { mapOverzichtToStappenplanTabs, pickUrgentRowIds } from './mapOverzichtToStappenplanTabs';
+import { mapOverzichtToStappenplanTabs, pickUrgentRowIds, buildStappenplanProgress } from './mapOverzichtToStappenplanTabs';
 
 const DEMO_TODAY = '2025-04-20';
 
@@ -33,5 +33,16 @@ describe('mapOverzichtToStappenplanTabs', () => {
     const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false);
     const urgent = pickUrgentRowIds(tabs['nog-te-doen']);
     expect(urgent.length).toBeLessThanOrEqual(2);
+  });
+
+  it('buildStappenplanProgress reflects completed vs open steps', () => {
+    const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false);
+    const progress = buildStappenplanProgress(tabs);
+
+    expect(progress.totalCount).toBe(tabs['nog-te-doen'].length + tabs.gedaan.length);
+    expect(progress.completedCount).toBe(tabs.gedaan.length);
+    expect(progress.percentage).toBeGreaterThanOrEqual(0);
+    expect(progress.percentage).toBeLessThanOrEqual(100);
+    expect(progress.userTasksComplete).toBe(tabs['nog-te-doen'].length === 0);
   });
 });

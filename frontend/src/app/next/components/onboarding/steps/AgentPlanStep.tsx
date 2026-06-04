@@ -1,4 +1,4 @@
-import { Bot, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { countAgentSteps, getPlannedAgentSteps } from '../../../lib/getPlannedAgentSteps';
 import type { BegeleidingsVoorkeur } from '../../../types/begeleiding';
 
@@ -36,8 +36,7 @@ export function AgentPlanStep({ voorkeur, onNext, onBack }: AgentPlanStepProps) 
 
         {agentSteps.length > 0 && (
           <div className="mb-6">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-[#007AC8]">
-              <Bot className="h-4 w-4" aria-hidden />
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#007AC8]">
               Op de achtergrond
             </h2>
             <ul className="space-y-2">
@@ -72,7 +71,7 @@ export function AgentPlanStep({ voorkeur, onNext, onBack }: AgentPlanStepProps) 
           </div>
         )}
 
-        {voorkeur.niveau === 'zelf' && (
+        {(voorkeur.niveau === 'zelf' || voorkeur.niveau === 'keuze') && (
           <p className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-950">
             U koos om zelf te regelen. Wij tonen vooral informatie; agents voeren geen acties uit
             tenzij u dat later alsnog vraagt.

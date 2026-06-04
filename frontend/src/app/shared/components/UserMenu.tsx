@@ -6,9 +6,9 @@ interface UserMenuProps {
 
 export function UserMenu({ onLogout }: UserMenuProps) {
   return (
-    <div className="flex items-center gap-5 text-sm">
-      <div className="flex items-center gap-2 text-gray-900">
-        <User className="h-5 w-5 text-gray-600" strokeWidth={1.75} />
+    <div className="flex items-center gap-4 text-sm">
+      <div className="flex items-center gap-1.5 text-gray-900">
+        <User className="h-4 w-4 text-gray-600" strokeWidth={1.75} />
         <span className="font-semibold">Truus</span>
       </div>
       <button

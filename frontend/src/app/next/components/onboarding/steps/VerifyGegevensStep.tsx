@@ -2,7 +2,6 @@ import type { GegevensProfiel } from '../../../types/begeleiding';
 import { formatAdres } from '../../../types/begeleiding';
 import {
   AdresGegevensCard,
-  BsnGegevensCard,
   IbanGegevensCard,
   NaamGegevensCard,
 } from '../SecureGegevensCard';
@@ -40,7 +39,6 @@ export function VerifyGegevensStep({
             value={gegevens.adres}
             onChange={(adres) => patch({ adres })}
           />
-          <BsnGegevensCard value={gegevens.bsn} onChange={(bsn) => patch({ bsn })} />
           <IbanGegevensCard value={gegevens.iban} onChange={(iban) => patch({ iban })} />
         </div>
 

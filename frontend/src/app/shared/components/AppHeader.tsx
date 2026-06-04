@@ -1,52 +1,46 @@
-import type { AppVersion } from '../hooks/useAppVersion';
-import type { BegeleidingsVoorkeur } from '../../next/types/begeleiding';
+import type { BegeleidingsVoorkeur, MeldingenVoorkeur } from '../../next/types/begeleiding';
 import { InstellingenMenu } from './InstellingenMenu';
 import { GovernmentLogo } from './GovernmentLogo';
 import { UserMenu } from './UserMenu';
-import { VersionToggle } from './VersionToggle';
 
 interface AppHeaderProps {
-  version: AppVersion;
-  onVersionChange: (version: AppVersion) => void;
   onLogout?: () => void;
   begeleidingVoorkeur?: BegeleidingsVoorkeur;
   onBegeleidingChange?: (v: BegeleidingsVoorkeur) => void;
+  meldingenVoorkeur?: MeldingenVoorkeur;
+  onMeldingenChange?: (v: MeldingenVoorkeur) => void;
   onResetOnboarding?: () => void;
-  showVersionToggle?: boolean;
 }
 
 export function AppHeader({
-  version,
-  onVersionChange,
   onLogout,
   begeleidingVoorkeur,
   onBegeleidingChange,
+  meldingenVoorkeur,
+  onMeldingenChange,
   onResetOnboarding,
-  showVersionToggle = true,
 }: AppHeaderProps) {
   return (
-    <header className="shrink-0 bg-white">
-      <div className="relative flex min-h-[4.5rem] items-center justify-between px-8 py-3">
-        <div className="relative z-10 flex min-w-[9.5rem] items-center">
-          {showVersionToggle && (
-            <VersionToggle version={version} onVersionChange={onVersionChange} />
-          )}
-        </div>
+    <header className="relative z-50 shrink-0 overflow-visible bg-white">
+      <div className="flex h-12 items-center justify-between px-6 lg:px-8">
+        <div className="min-w-[8rem]" aria-hidden />
 
-        <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center">
-          <GovernmentLogo />
-        </div>
-
-        <div className="relative z-10 flex min-w-[12rem] items-center justify-end gap-4">
-          {begeleidingVoorkeur && onBegeleidingChange && (
+        <div className="relative z-10 flex min-w-[12rem] items-center justify-end gap-3">
+          {begeleidingVoorkeur && onBegeleidingChange && meldingenVoorkeur && onMeldingenChange && (
             <InstellingenMenu
               voorkeur={begeleidingVoorkeur}
               onChange={onBegeleidingChange}
+              meldingen={meldingenVoorkeur}
+              onMeldingenChange={onMeldingenChange}
               onResetOnboarding={onResetOnboarding}
             />
           )}
           <UserMenu onLogout={onLogout} />
         </div>
+      </div>
+
+      <div className="pointer-events-none absolute left-1/2 top-0 z-[60] -translate-x-1/2">
+        <GovernmentLogo />
       </div>
     </header>
   );

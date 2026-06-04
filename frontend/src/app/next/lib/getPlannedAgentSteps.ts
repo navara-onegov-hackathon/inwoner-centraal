@@ -59,7 +59,7 @@ const ALL_PLANNED: PlannedAgentStep[] = [
 ];
 
 export function getPlannedAgentSteps(voorkeur: BegeleidingsVoorkeur): PlannedAgentStep[] {
-  if (voorkeur.niveau === 'zelf') {
+  if (voorkeur.niveau === 'zelf' || voorkeur.niveau === 'keuze') {
     return ALL_PLANNED.map((s) => ({
       ...s,
       voorWie: 'u' as const,
@@ -68,18 +68,6 @@ export function getPlannedAgentSteps(voorkeur: BegeleidingsVoorkeur): PlannedAge
           ? `${s.omschrijving} — u doet dit zelf`
           : s.omschrijving,
     }));
-  }
-
-  if (voorkeur.niveau === 'keuze') {
-    return ALL_PLANNED.map((s) => {
-      const zelf = voorkeur.zelfRegelenOrganisaties.includes(s.organisatie);
-      if (s.organisatie === 'Diverse') return s;
-      return {
-        ...s,
-        voorWie: zelf ? ('u' as const) : ('agent' as const),
-        omschrijving: zelf ? `${s.omschrijving} — u regelt dit zelf` : s.omschrijving,
-      };
-    });
   }
 
   return ALL_PLANNED;

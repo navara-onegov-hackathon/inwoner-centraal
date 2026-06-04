@@ -48,9 +48,9 @@ export function OverzichtPage({ voorkeur }: OverzichtPageProps) {
         <span className="font-semibold text-gray-900">Nabestaande</span>
       </nav>
 
-      <h1 className="mb-8 text-[2rem] font-bold leading-tight text-gray-900">Stappenplan</h1>
-
       <DataCorrectionBlock />
+
+      <h1 className="mb-6 mt-10 text-[2rem] font-bold leading-tight text-gray-900">Stappenplan</h1>
 
       <StappenplanOverzichtPanel partitioned={partitioned} isUitgebreid={isUitgebreid} />
     </div>

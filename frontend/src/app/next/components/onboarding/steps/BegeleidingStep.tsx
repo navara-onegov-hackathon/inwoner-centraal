@@ -1,9 +1,5 @@
 import { Check } from 'lucide-react';
-import {
-  DELEGATIE_ORGANISATIES,
-  type BegeleidingsVoorkeur,
-  type Begeleidingsniveau,
-} from '../../../types/begeleiding';
+import type { BegeleidingsVoorkeur, Begeleidingsniveau } from '../../../types/begeleiding';
 
 interface BegeleidingStepProps {
   voorkeur: BegeleidingsVoorkeur;
@@ -43,30 +39,20 @@ const OPTIONS: {
   },
   {
     niveau: 'keuze',
-    title: 'Ik kies per organisatie',
-    summary: 'Bepaal per organisatie of wij helpen of u het zelf doet.',
+    title: 'Ik kies per taak',
+    summary: 'Bepaal per taak of u het zelf regelt of hulp wilt.',
     bullets: [
-      'Per organisatie: wij regelen of u zelf',
-      'Betalingen en aangiftes kunnen bij u blijven',
-      'Flexibel aan te passen',
+      'Per taak kiezen wat bij u past',
+      'Geen automatische acties op de achtergrond',
+      'Meer controle, taak voor taak',
     ],
-    hint: 'Geschikt als u sommige zaken zelf wilt, andere niet.',
+    hint: 'Geschikt als u sommige stappen zelf wilt, andere niet.',
   },
 ];
 
 export function BegeleidingStep({ voorkeur, onChange, onNext, onBack }: BegeleidingStepProps) {
   const select = (niveau: Begeleidingsniveau) => {
-    onChange({
-      niveau,
-      zelfRegelenOrganisaties: niveau === 'keuze' ? voorkeur.zelfRegelenOrganisaties : [],
-    });
-  };
-
-  const toggleOrg = (org: string) => {
-    const set = new Set(voorkeur.zelfRegelenOrganisaties);
-    if (set.has(org)) set.delete(org);
-    else set.add(org);
-    onChange({ niveau: 'keuze', zelfRegelenOrganisaties: [...set] });
+    onChange({ niveau, zelfRegelenOrganisaties: [] });
   };
 
   return (
@@ -74,7 +60,7 @@ export function BegeleidingStep({ voorkeur, onChange, onNext, onBack }: Begeleid
       <div className="flex-1">
         <h1 className="mb-2 text-2xl font-bold text-gray-900">Hoeveel mag wij voor u doen?</h1>
         <p className="mb-6 text-sm text-gray-600">
-          U kunt dit later altijd wijzigen via <strong>Begeleiding</strong> in het menu.
+          U kunt dit later altijd wijzigen via <strong>Instellingen</strong> in het menu.
         </p>
 
         <div className="space-y-3">
@@ -110,33 +96,6 @@ export function BegeleidingStep({ voorkeur, onChange, onNext, onBack }: Begeleid
             );
           })}
         </div>
-
-        {voorkeur.niveau === 'keuze' && (
-          <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <p className="mb-3 text-sm font-semibold text-gray-900">
-              Welke organisaties regelt u liever zelf?
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {DELEGATIE_ORGANISATIES.map((org) => {
-                const active = voorkeur.zelfRegelenOrganisaties.includes(org);
-                return (
-                  <button
-                    key={org}
-                    type="button"
-                    onClick={() => toggleOrg(org)}
-                    className={`rounded-full px-3 py-1 text-sm font-medium transition ${
-                      active
-                        ? 'bg-[#007AC8] text-white'
-                        : 'bg-white text-gray-700 ring-1 ring-gray-300 hover:ring-[#007AC8]'
-                    }`}
-                  >
-                    {org}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="mt-8 flex gap-3">
