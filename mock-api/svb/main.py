@@ -12,11 +12,27 @@ app = FastAPI(
 
 # --- Pydantic modellen ---
 
+class Adres(BaseModel):
+    straat: str
+    huisnummer: str
+    postcode: str
+    stad: str
+    landcode: str
+
+
 class Partner(BaseModel):
     bsn: str
     naam: str
     aow_gerechtigd: bool
     anw_gerechtigd: bool
+    adres: Optional[Adres]
+
+
+class PartnerUpdate(BaseModel):
+    naam: Optional[str] = None
+    adres: Optional[Adres] = None
+    aow_gerechtigd: Optional[bool] = None
+    anw_gerechtigd: Optional[bool] = None
 
 
 class Uitkering(BaseModel):
@@ -51,6 +67,13 @@ PARTNERS: dict[str, dict] = {
             "naam": "T. de Vries-Bakker",
             "aow_gerechtigd": True,
             "anw_gerechtigd": False,    # boven AOW-leeftijd, dus geen ANW
+            "adres": {
+                "straat": "Nieuwegracht",
+                "huisnummer": "8",
+                "postcode": "3512LC",
+                "stad": "Utrecht",
+                "landcode": "NL",
+            },
         },
         "uitkeringen": [
             {
@@ -87,6 +110,16 @@ def get_partner(bsn: str):
     """Geeft het SVB-partnerprofiel terug voor het opgegeven BSN."""
     if bsn not in PARTNERS:
         raise HTTPException(status_code=404, detail="Geen SVB-partner gevonden voor dit BSN.")
+    return PARTNERS[bsn]["partner"]
+
+
+@app.patch("/partners/{bsn}", response_model=Partner)
+def update_partner(bsn: str, update: PartnerUpdate):
+    """Werkt partnergegevens bij voor het opgegeven BSN. Alleen meegestuurde velden worden overschreven."""
+    if bsn not in PARTNERS:
+        raise HTTPException(status_code=404, detail="Geen SVB-partner gevonden voor dit BSN.")
+    for field, value in update.model_dump(exclude_unset=True).items():
+        PARTNERS[bsn]["partner"][field] = value
     return PARTNERS[bsn]["partner"]
 
 
