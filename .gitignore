@@ -45,7 +45,6 @@ htmlcov/
 .cursor
 
 # Agent-generated documentation
-/docs/
 CONTEXT.md
 CONTEXT-MAP.md
 

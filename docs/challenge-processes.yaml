@@ -1,0 +1,459 @@
+version: 1
+source: onegov2-inwoner-centraal
+assumptions:
+  delegated_access_in_place: true
+  intake_replaced_by_data_discovery: true
+  scope: "Only challenge-backed government processes from briefing, docs, and synthetic data"
+  demo_non_challenge_backed_processes_default_to_not_applicable: true
+
+discovery_inputs:
+  - overledene
+  - partner
+  - relatie
+  - verplichtingen
+  - rechten
+  - correspondentie
+  - kvk_rvo
+
+processes:
+  - id: svb-anw-aanvragen
+    organisation: SVB
+    process: ANW aanvragen
+    relevant_if:
+      all:
+        - "rechten contains item where organisatie == 'SVB' and categorie == 'anw'"
+    not_relevant_if:
+      any:
+        - "rechten has no item where organisatie == 'SVB' and categorie == 'anw'"
+    evidence_from_discovery:
+      - rechten.categorie
+      - rechten.organisatie
+
+  - id: svb-overlijdensuitkering-volgen
+    organisation: SVB
+    process: Overlijdensuitkering volgen
+    relevant_if:
+      any:
+        - "rechten contains item where organisatie == 'SVB' and omschrijving contains 'Overlijdensuitkering AOW'"
+        - "correspondentie contains item where brief_code == 'SVB.OVERLIJDENSUITKERING'"
+    not_relevant_if:
+      all:
+        - "rechten has no matching SVB overlijdensuitkering item"
+        - "correspondentie has no brief_code 'SVB.OVERLIJDENSUITKERING'"
+    evidence_from_discovery:
+      - rechten.omschrijving
+      - correspondentie.brief_code
+
+  - id: svb-jaaropgave-bewaren
+    organisation: SVB
+    process: Jaaropgave bewaren
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'SVB.JAAROPGAVE'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'SVB.JAAROPGAVE'"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+
+  - id: cak-wlz-factuur-betalen
+    organisation: CAK
+    process: WLZ-factuur betalen
+    relevant_if:
+      any:
+        - "verplichtingen contains item where organisatie == 'CAK'"
+        - "correspondentie contains item where brief_code == 'CAK.WLZ-FACTUUR'"
+    not_relevant_if:
+      all:
+        - "verplichtingen has no item where organisatie == 'CAK'"
+        - "correspondentie has no brief_code 'CAK.WLZ-FACTUUR'"
+    evidence_from_discovery:
+      - verplichtingen.organisatie
+      - correspondentie.brief_code
+
+  - id: cak-incasso-mislukt-oplossen
+    organisation: CAK
+    process: Mislukte incasso oplossen
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'CAK.INCASSO-MISLUKT'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'CAK.INCASSO-MISLUKT'"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+
+  - id: toeslagen-zorg-herziening-beoordelen
+    organisation: Toeslagen
+    process: Herziene beschikking zorgtoeslag beoordelen
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'TOESLAGEN.HERZIENE-BESCHIKKING-ZORG'"
+        - "verplichtingen contains item where organisatie == 'Toeslagen' and categorie == 'toeslag'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'TOESLAGEN.HERZIENE-BESCHIKKING-ZORG'"
+        - "verplichtingen has no matching Toeslagen toeslag item for the deceased"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+      - verplichtingen.organisatie
+      - verplichtingen.categorie
+
+  - id: toeslagen-zorg-terugvordering-afhandelen
+    organisation: Toeslagen
+    process: Terugvordering zorgtoeslag afhandelen
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'TOESLAGEN.TERUGVORDERING-ZORG'"
+        - "verplichtingen contains item where organisatie == 'Toeslagen' and omschrijving contains 'Terugvordering zorgtoeslag'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'TOESLAGEN.TERUGVORDERING-ZORG'"
+        - "verplichtingen has no matching terugvordering item"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+      - verplichtingen.omschrijving
+
+  - id: toeslagen-huur-herberekening-volgen
+    organisation: Toeslagen
+    process: Huurtoeslag herberekening volgen
+    relevant_if:
+      any:
+        - "rechten contains item where organisatie == 'Toeslagen' and categorie == 'toeslag_herberekening'"
+        - "correspondentie contains item where brief_code == 'TOESLAGEN.HERZIENE-BESCHIKKING-HUUR'"
+    not_relevant_if:
+      all:
+        - "rechten has no Toeslagen item with categorie 'toeslag_herberekening'"
+        - "correspondentie has no brief_code 'TOESLAGEN.HERZIENE-BESCHIKKING-HUUR'"
+    evidence_from_discovery:
+      - rechten.categorie
+      - correspondentie.brief_code
+
+  - id: toeslagen-late-definitieve-toekenning-volgen
+    organisation: Toeslagen
+    process: Definitieve toekenning zorgtoeslag volgen
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'TOESLAGEN.DEFINITIEVE-TOEKENNING-ZORG'"
+        - "verplichtingen contains item where organisatie == 'Toeslagen' and omschrijving contains 'Naheffing'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'TOESLAGEN.DEFINITIEVE-TOEKENNING-ZORG'"
+        - "verplichtingen has no Toeslagen naheffing item"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+      - verplichtingen.omschrijving
+
+  - id: toeslagen-late-naheffing-afhandelen
+    organisation: Toeslagen
+    process: Late naheffing of rekeningnummer-uitvraag afhandelen
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'TOESLAGEN.NAHEFFING-LATE-ZORG'"
+        - "verplichtingen contains item where organisatie == 'Toeslagen' and omschrijving contains 'Naheffing'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'TOESLAGEN.NAHEFFING-LATE-ZORG'"
+        - "verplichtingen has no matching naheffing item"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+      - verplichtingen.omschrijving
+
+  - id: belastingdienst-contactpersoon-doorgeven
+    organisation: Belastingdienst
+    process: Contactpersoon doorgeven
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'BD.ERVENBRIEF'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'BD.ERVENBRIEF'"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+
+  - id: belastingdienst-erfbelasting
+    organisation: Belastingdienst
+    process: Aangifte erfbelasting
+    relevant_if:
+      any:
+        - "verplichtingen contains item where organisatie == 'Belastingdienst' and categorie == 'erfbelasting'"
+        - "correspondentie contains item where brief_code == 'BD.AANGIFTE-ERFBELASTING'"
+    not_relevant_if:
+      all:
+        - "verplichtingen has no Belastingdienst item with categorie 'erfbelasting'"
+        - "correspondentie has no brief_code 'BD.AANGIFTE-ERFBELASTING'"
+    evidence_from_discovery:
+      - verplichtingen.categorie
+      - correspondentie.brief_code
+
+  - id: belastingdienst-ib-overlijdensjaar
+    organisation: Belastingdienst
+    process: Aangifte of aanslag inkomstenbelasting overlijdensjaar
+    relevant_if:
+      any:
+        - "verplichtingen contains item where organisatie == 'Belastingdienst' and categorie == 'aanslag_ib'"
+        - "correspondentie contains item where brief_code == 'BD.AANSLAG-IB-OVERLIJDEN'"
+    not_relevant_if:
+      all:
+        - "verplichtingen has no Belastingdienst item with categorie 'aanslag_ib'"
+        - "correspondentie has no brief_code 'BD.AANSLAG-IB-OVERLIJDEN'"
+    evidence_from_discovery:
+      - verplichtingen.categorie
+      - correspondentie.brief_code
+
+  - id: gemeente-condoleance-tonen
+    organisation: Gemeente
+    process: Gemeentelijke condoleance tonen
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'GEMEENTE.CONDOLEANCE'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'GEMEENTE.CONDOLEANCE'"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+
+  - id: gemeente-parkeervergunning
+    organisation: Gemeente
+    process: Parkeervergunning overnemen of stopzetten
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'GEMEENTE.PARKEERVERGUNNING'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'GEMEENTE.PARKEERVERGUNNING'"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+
+  - id: gemeente-lokale-belasting
+    organisation: Gemeente
+    process: Gemeentelijke belastingen betalen of bezwaar maken
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'GEMEENTE.LOKALE-BELASTING'"
+        - "verplichtingen contains item where organisatie == 'Gemeente'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'GEMEENTE.LOKALE-BELASTING'"
+        - "verplichtingen has no item where organisatie == 'Gemeente'"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+      - verplichtingen.organisatie
+
+  - id: waterschap-aanslag
+    organisation: Waterschap
+    process: Waterschapsbelasting betalen
+    relevant_if:
+      any:
+        - "verplichtingen contains item where organisatie == 'Waterschap'"
+        - "correspondentie contains item where brief_code == 'WS.AANSLAG'"
+    not_relevant_if:
+      all:
+        - "verplichtingen has no item where organisatie == 'Waterschap'"
+        - "correspondentie has no brief_code 'WS.AANSLAG'"
+    evidence_from_discovery:
+      - verplichtingen.organisatie
+      - correspondentie.brief_code
+
+  - id: rdw-overschrijven
+    organisation: RDW
+    process: Voertuig overschrijven of vrijwaring regelen
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'RDW.S-1712'"
+        - "correspondentie contains item where brief_code == 'RDW.S-0068'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no RDW vehicle-related brief_code"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+
+  - id: rdw-beeindiging-tenaamstelling-volgen
+    organisation: RDW
+    process: Beëindiging tenaamstelling volgen
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'RDW.S-1713'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'RDW.S-1713'"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+
+  - id: cjib-boete
+    organisation: CJIB
+    process: Openstaande boete of vordering afhandelen
+    relevant_if:
+      any:
+        - "verplichtingen contains item where organisatie == 'CJIB'"
+        - "correspondentie contains item where brief_code == 'CJIB.OPENSTAANDE-BOETE'"
+    not_relevant_if:
+      all:
+        - "verplichtingen has no item where organisatie == 'CJIB'"
+        - "correspondentie has no brief_code 'CJIB.OPENSTAANDE-BOETE'"
+    evidence_from_discovery:
+      - verplichtingen.organisatie
+      - correspondentie.brief_code
+
+  - id: uwv-stopzetting-tonen
+    organisation: UWV
+    process: Stopzetting WW of WIA tonen
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'UWV.STOPZETTING'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'UWV.STOPZETTING'"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+
+  - id: duo-studieschuld-vervalt-tonen
+    organisation: DUO
+    process: Vervallen studieschuld tonen
+    relevant_if:
+      any:
+        - "correspondentie contains item where brief_code == 'DUO.STUDIESCHULD-VERVALT'"
+    not_relevant_if:
+      all:
+        - "correspondentie has no brief_code 'DUO.STUDIESCHULD-VERVALT'"
+    evidence_from_discovery:
+      - correspondentie.brief_code
+
+  - id: partnerrecht-nabestaandenpensioen
+    organisation: UWV
+    process: Mogelijk nabestaandenpensioen onderzoeken
+    relevant_if:
+      any:
+        - "rechten contains item where categorie == 'nabestaandenpensioen'"
+    not_relevant_if:
+      all:
+        - "rechten has no item where categorie == 'nabestaandenpensioen'"
+    evidence_from_discovery:
+      - rechten.categorie
+
+  - id: partnerrecht-bijstand-of-inkomensondersteuning
+    organisation: Diverse
+    process: Mogelijk recht op bijstand of inkomensondersteuning onderzoeken
+    relevant_if:
+      any:
+        - "rechten contains item where categorie == 'bijstand'"
+        - "rechten contains item where categorie == 'inkomensondersteuning'"
+    not_relevant_if:
+      all:
+        - "rechten has no item where categorie in ['bijstand', 'inkomensondersteuning']"
+    evidence_from_discovery:
+      - rechten.categorie
+
+  - id: kvk-onderneming-uitschrijven-of-voortzetten
+    organisation: KVK
+    process: Onderneming uitschrijven, liquideren, of voortzetten
+    relevant_if:
+      any:
+        - "kvk_rvo exists"
+        - "correspondentie contains item where brief_code == 'KVK.UITSCHRIJVING'"
+    not_relevant_if:
+      all:
+        - "kvk_rvo is absent"
+        - "correspondentie has no brief_code 'KVK.UITSCHRIJVING'"
+    evidence_from_discovery:
+      - kvk_rvo
+      - correspondentie.brief_code
+
+  - id: rvo-wbso-afhandelen
+    organisation: RVO
+    process: WBSO-verplichting afhandelen
+    relevant_if:
+      any:
+        - "kvk_rvo.wbso_verplichtingen exists and has at least one item"
+        - "correspondentie contains item where brief_code == 'RVO.WBSO-VERPLICHTING'"
+    not_relevant_if:
+      all:
+        - "kvk_rvo is absent or kvk_rvo.wbso_verplichtingen is empty"
+        - "correspondentie has no brief_code 'RVO.WBSO-VERPLICHTING'"
+    evidence_from_discovery:
+      - kvk_rvo.wbso_verplichtingen
+      - correspondentie.brief_code
+
+  - id: rvo-subsidie-eindafrekening-of-voortgang
+    organisation: RVO
+    process: RVO-subsidieverplichtingen afhandelen
+    relevant_if:
+      any:
+        - "kvk_rvo.rvo_subsidies exists and has at least one item"
+    not_relevant_if:
+      all:
+        - "kvk_rvo is absent or kvk_rvo.rvo_subsidies is empty"
+    evidence_from_discovery:
+      - kvk_rvo.rvo_subsidies
+
+  - id: gemeente-akte-van-overlijden-aanvragen
+    organisation: Gemeente
+    process: Akte van overlijden aanvragen
+    challenge_backed: false
+    demo_default_applicability: not_applicable
+    relevant_if:
+      any: []
+    not_relevant_if:
+      any:
+        - "Demo assumption: non challenge-backed process"
+    evidence_from_discovery: []
+
+  - id: notaris-verklaring-van-erfrecht
+    organisation: Notaris
+    process: Verklaring van erfrecht aanvragen
+    challenge_backed: false
+    demo_default_applicability: not_applicable
+    relevant_if:
+      any: []
+    not_relevant_if:
+      any:
+        - "Demo assumption: non challenge-backed process"
+    evidence_from_discovery: []
+
+  - id: post-reclamepost-stopzetten
+    organisation: Diverse
+    process: Geadresseerde reclamepost stopzetten
+    challenge_backed: false
+    demo_default_applicability: not_applicable
+    relevant_if:
+      any: []
+    not_relevant_if:
+      any:
+        - "Demo assumption: non challenge-backed process"
+    evidence_from_discovery: []
+
+  - id: contracten-abonnementen-opzeggen
+    organisation: Diverse
+    process: Abonnementen en contracten opzeggen of wijzigen
+    challenge_backed: false
+    demo_default_applicability: not_applicable
+    relevant_if:
+      any: []
+    not_relevant_if:
+      any:
+        - "Demo assumption: non challenge-backed process"
+    evidence_from_discovery: []
+
+  - id: verzekeringen-aanpassen-of-opzeggen
+    organisation: Verzekeraar
+    process: Verzekeringen aanpassen of opzeggen
+    challenge_backed: false
+    demo_default_applicability: not_applicable
+    relevant_if:
+      any: []
+    not_relevant_if:
+      any:
+        - "Demo assumption: non challenge-backed process"
+    evidence_from_discovery: []
+
+  - id: hypotheekverstrekker-melden
+    organisation: Hypotheekverstrekker
+    process: Overlijden melden bij hypotheekverstrekker
+    challenge_backed: false
+    demo_default_applicability: not_applicable
+    relevant_if:
+      any: []
+    not_relevant_if:
+      any:
+        - "Demo assumption: non challenge-backed process"
+    evidence_from_discovery: []
