@@ -1,4 +1,4 @@
-import logoSvg from '../../imports/logo-rijksoverheid-wapen.svg';
+import logoSvg from '../../../imports/logo-rijksoverheid-wapen.svg';
 
 interface GovernmentLogoProps {
   className?: string;
