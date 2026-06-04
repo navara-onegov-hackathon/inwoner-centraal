@@ -61,6 +61,7 @@ export function NextApp({ version, onVersionChange }: NextAppProps) {
             initialVoorkeur={voorkeur}
             onVoorkeurChange={setVoorkeur}
             onComplete={complete}
+            onRestartDemo={reset}
           />
         ) : (
           <OverzichtPage voorkeur={voorkeur} />

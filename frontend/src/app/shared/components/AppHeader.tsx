@@ -1,6 +1,6 @@
 import type { AppVersion } from '../hooks/useAppVersion';
 import type { BegeleidingsVoorkeur } from '../../next/types/begeleiding';
-import { BegeleidingMenu } from './BegeleidingMenu';
+import { InstellingenMenu } from './InstellingenMenu';
 import { GovernmentLogo } from './GovernmentLogo';
 import { UserMenu } from './UserMenu';
 import { VersionToggle } from './VersionToggle';
@@ -39,7 +39,7 @@ export function AppHeader({
 
         <div className="relative z-10 flex min-w-[12rem] items-center justify-end gap-4">
           {begeleidingVoorkeur && onBegeleidingChange && (
-            <BegeleidingMenu
+            <InstellingenMenu
               voorkeur={begeleidingVoorkeur}
               onChange={onBegeleidingChange}
               onResetOnboarding={onResetOnboarding}
