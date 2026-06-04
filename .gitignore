@@ -39,6 +39,7 @@ db.sqlite3-journal
 .ruff_cache/
 .coverage
 htmlcov/
+.pnpm-store/
 
 # OS/editor
 .DS_Store
