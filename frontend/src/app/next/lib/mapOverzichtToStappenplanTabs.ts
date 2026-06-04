@@ -106,7 +106,29 @@ export function pickUrgentRowIds(rows: StappenplanRow[]): string[] {
 }
 
 export function countProgress(tabs: StappenplanTabRows): { done: number; total: number } {
-  const done = tabs.gedaan.length;
-  const total = tabs['nog-te-doen'].length + tabs.gedaan.length;
-  return { done, total: Math.max(total, 1) };
+  const progress = buildStappenplanProgress(tabs);
+  return { done: progress.completedCount, total: progress.totalCount };
+}
+
+export interface StappenplanProgress {
+  completedCount: number;
+  totalCount: number;
+  percentage: number;
+  isComplete: boolean;
+  userTasksComplete: boolean;
+}
+
+export function buildStappenplanProgress(tabs: StappenplanTabRows): StappenplanProgress {
+  const openByYou = tabs['nog-te-doen'].length;
+  const completedCount = tabs.gedaan.length;
+  const totalCount = Math.max(openByYou + completedCount, 1);
+  const percentage = Math.round((completedCount / totalCount) * 100);
+
+  return {
+    completedCount,
+    totalCount,
+    percentage,
+    isComplete: openByYou === 0 && completedCount > 0,
+    userTasksComplete: openByYou === 0,
+  };
 }

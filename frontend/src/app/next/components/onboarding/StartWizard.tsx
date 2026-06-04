@@ -5,36 +5,50 @@ import {
   DEFAULT_GEGEVENS,
   type BegeleidingsVoorkeur,
   type GegevensProfiel,
+  type MeldingenVoorkeur,
 } from '../../types/begeleiding';
 import { AgentPlanStep } from './steps/AgentPlanStep';
 import { BegeleidingStep } from './steps/BegeleidingStep';
 import { CondoleanceStep } from './steps/CondoleanceStep';
 import { DelegatieAfgerondStep } from './steps/DelegatieAfgerondStep';
-import { DelegatieStep } from './steps/DelegatieStep';
+import { DelegatieStep, type DelegatieGegevens } from './steps/DelegatieStep';
+import { MeldingenStep } from './steps/MeldingenStep';
 import { VerifyGegevensStep } from './steps/VerifyGegevensStep';
 import type { PersonaContext } from '../../types/overzicht';
 
 interface StartWizardProps {
   persona: PersonaContext;
   initialVoorkeur: BegeleidingsVoorkeur;
+  initialMeldingen: MeldingenVoorkeur;
   onVoorkeurChange: (v: BegeleidingsVoorkeur) => void;
+  onMeldingenChange: (v: MeldingenVoorkeur) => void;
   onComplete: (gegevens: GegevensProfiel) => void;
   onRestartDemo: () => void;
 }
 
-const STEPS = ['condoleance', 'delegatie', 'begeleiding', 'agentPlan', 'verifyGegevens'] as const;
+const STEPS = [
+  'condoleance',
+  'delegatie',
+  'meldingen',
+  'begeleiding',
+  'agentPlan',
+  'verifyGegevens',
+] as const;
 
 export function StartWizard({
   persona,
   initialVoorkeur,
+  initialMeldingen,
   onVoorkeurChange,
+  onMeldingenChange,
   onComplete,
-  onRestartDemo,
+  onRestartDemo: _onRestartDemo,
 }: StartWizardProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [voorkeur, setVoorkeur] = useState<BegeleidingsVoorkeur>(initialVoorkeur);
+  const [meldingen, setMeldingen] = useState<MeldingenVoorkeur>(initialMeldingen);
   const [gegevens, setGegevens] = useState<GegevensProfiel>(DEFAULT_GEGEVENS);
-  const [delegatedTo, setDelegatedTo] = useState<string | null>(null);
+  const [delegatedTo, setDelegatedTo] = useState<DelegatieGegevens | null>(null);
 
   const step = STEPS[stepIndex];
 
@@ -43,17 +57,22 @@ export function StartWizard({
     onVoorkeurChange(next);
   };
 
+  const updateMeldingen = (next: MeldingenVoorkeur) => {
+    setMeldingen(next);
+    onMeldingenChange(next);
+  };
+
   const next = () => setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
   const back = () => setStepIndex((i) => Math.max(i - 1, 0));
 
   if (delegatedTo) {
     return (
-      <DelegatieAfgerondStep delegateName={delegatedTo} onRestartDemo={onRestartDemo} />
+      <DelegatieAfgerondStep delegateName={delegatedTo.naam} />
     );
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-4.5rem)] max-w-2xl flex-col px-6 py-10">
+    <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-2xl flex-col px-6 py-10">
       <div className="mb-8 flex gap-2">
         {STEPS.map((s, i) => (
           <div
@@ -83,6 +102,14 @@ export function StartWizard({
                 onSelfContinue={next}
                 onTogether={next}
                 onDelegate={setDelegatedTo}
+                onBack={back}
+              />
+            )}
+            {step === 'meldingen' && (
+              <MeldingenStep
+                voorkeur={meldingen}
+                onChange={updateMeldingen}
+                onNext={next}
                 onBack={back}
               />
             )}

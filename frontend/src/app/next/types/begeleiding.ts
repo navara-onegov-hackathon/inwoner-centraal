@@ -102,12 +102,29 @@ function parseLegacyAdresString(value: string): AdresGegevens {
   return { ...DEFAULT_GEGEVENS.adres, straat: value };
 }
 
+export interface MeldingenVoorkeur {
+  governmentSupport: boolean;
+  suggestions: boolean;
+  emailSteps: boolean;
+  emailNotifications: boolean;
+  inAppNotifications: boolean;
+}
+
+export const DEFAULT_MELDINGEN: MeldingenVoorkeur = {
+  governmentSupport: true,
+  suggestions: true,
+  emailSteps: true,
+  emailNotifications: false,
+  inAppNotifications: false,
+};
+
 export const BEGELEIDING_LABELS: Record<Begeleidingsniveau, string> = {
   maximaal: 'Maximaal',
   zelf: 'Zelf regelen',
-  keuze: 'Per organisatie',
+  keuze: 'Per taak',
 };
 
 export const ONBOARDING_STORAGE_KEY = 'inwoner-centraal:onboarding-complete';
 export const BEGELEIDING_STORAGE_KEY = 'inwoner-centraal:begeleidings-voorkeur';
 export const GEGEVENS_STORAGE_KEY = 'inwoner-centraal:gegevens-profiel';
+export const MELDINGEN_STORAGE_KEY = 'inwoner-centraal:meldingen-voorkeur';

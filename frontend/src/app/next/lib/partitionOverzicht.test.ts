@@ -26,12 +26,14 @@ describe('partitionOverzicht', () => {
     expect(board.op_achtergrond).toHaveLength(0);
   });
 
-  it('keuze mode adds org tasks to actie_van_u', () => {
-    const board = partitionOverzicht(overzicht, {
+  it('keuze mode behaves like zelf mode', () => {
+    const keuzeBoard = partitionOverzicht(overzicht, {
       niveau: 'keuze',
       zelfRegelenOrganisaties: ['CAK'],
     });
-    expect(board.actie_van_u.some((t) => t.organisatie === 'CAK')).toBe(true);
+    const zelfBoard = partitionOverzicht(overzicht, { niveau: 'zelf', zelfRegelenOrganisaties: [] });
+    expect(keuzeBoard.actie_van_u.length).toBe(zelfBoard.actie_van_u.length);
+    expect(keuzeBoard.op_achtergrond).toHaveLength(0);
   });
 });
 

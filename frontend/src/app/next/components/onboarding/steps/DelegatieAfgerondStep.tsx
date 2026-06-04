@@ -2,17 +2,18 @@ import { CheckCircle2 } from 'lucide-react';
 
 interface DelegatieAfgerondStepProps {
   delegateName: string;
-  onRestartDemo: () => void;
 }
 
-export function DelegatieAfgerondStep({ delegateName, onRestartDemo }: DelegatieAfgerondStepProps) {
+export function DelegatieAfgerondStep({ delegateName }: DelegatieAfgerondStepProps) {
+  const voornaam = delegateName.trim().split(/\s+/)[0] || delegateName;
+
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-4.5rem)] max-w-lg flex-col items-center justify-center px-6 py-10 text-center">
-      <CheckCircle2 className="mb-6 h-16 w-16 text-green-600" aria-hidden />
-      <h1 className="mb-3 text-2xl font-bold text-gray-900">Overdracht geregeld</h1>
-      <p className="mb-2 text-base leading-relaxed text-gray-700">
-        We hebben <strong>{delegateName}</strong> uitgenodigd om het verdere traject over te nemen.
-        Zij ontvangen dezelfde begeleide stappen en kunnen daarna het overzicht inzien.
+    <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-lg flex-col items-center justify-center px-6 py-10 text-center">
+      <CheckCircle2 className="mb-5 h-14 w-14 text-green-600" aria-hidden />
+      <h1 className="mb-3 text-2xl font-bold text-gray-900">Verzoek verstuurd</h1>
+      <p className="mb-8 max-w-sm text-base leading-relaxed text-gray-700">
+        <strong>{voornaam}</strong> ontvangt een verzoek om via DigiD Machtigen het traject over te
+        nemen. Zodra de machtiging is afgerond, kan {voornaam} verder met uw stappenplan.
       </p>
       <p className="mb-8 text-sm text-gray-500">
         Voor deze demo eindigt uw traject hier. In de pitch tonen we het volledige hoofdtraject via
@@ -20,10 +21,10 @@ export function DelegatieAfgerondStep({ delegateName, onRestartDemo }: Delegatie
       </p>
       <button
         type="button"
-        onClick={onRestartDemo}
-        className="rounded-md border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+        className="rounded-md bg-[#007AC8] px-5 py-2.5 text-sm font-semibold text-white"
+        aria-disabled="true"
       >
-        Demo opnieuw starten
+        Naar overzicht
       </button>
     </div>
   );

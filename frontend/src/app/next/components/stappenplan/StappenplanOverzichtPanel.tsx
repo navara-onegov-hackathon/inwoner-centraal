@@ -1,7 +1,7 @@
-import { FileText, Lock } from 'lucide-react';
+import { CheckCircle2, FileText, Lock } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import {
-  countProgress,
+  buildStappenplanProgress,
   mapOverzichtToStappenplanTabs,
   pickUrgentRowIds,
   type StappenplanRow as StappenplanRowModel,
@@ -50,8 +50,7 @@ export function StappenplanOverzichtPanel({
     return sortedRows.filter((r) => r.organisatie.toLowerCase() === organization);
   }, [sortedRows, organization]);
 
-  const { done: doneCount, total: totalCount } = countProgress(tabRows);
-  const progress = Math.round((doneCount / totalCount) * 100);
+  const progress = useMemo(() => buildStappenplanProgress(tabRows), [tabRows]);
 
   const urgentIds = useMemo(
     () => new Set(pickUrgentRowIds(tabRows['nog-te-doen'])),
@@ -70,6 +69,51 @@ export function StappenplanOverzichtPanel({
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+      <section className="border-b border-gray-100 px-6 py-6">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+              Algehele status
+            </p>
+            <p className="mt-1 max-w-md text-sm leading-relaxed text-gray-600">
+              {progress.isComplete
+                ? 'Alle stappen zijn afgerond. U bent klaar.'
+                : progress.userTasksComplete
+                  ? 'U hoeft op dit moment niets te doen. Wij houden het overige in de gaten.'
+                  : 'Overzicht van hoe ver u bent met alle stappen.'}
+            </p>
+          </div>
+          <p
+            className={`text-4xl font-bold tabular-nums leading-none ${
+              progress.isComplete ? 'text-green-600' : 'text-[#007AC8]'
+            }`}
+          >
+            {progress.percentage}%
+          </p>
+        </div>
+        <div
+          className="h-3 overflow-hidden rounded-full bg-gray-200"
+          role="progressbar"
+          aria-valuenow={progress.percentage}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Algehele status: ${progress.percentage}%`}
+        >
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${
+              progress.isComplete ? 'bg-green-600' : 'bg-[#007AC8]'
+            }`}
+            style={{ width: `${progress.percentage}%` }}
+          />
+        </div>
+        <p className="mt-3 text-sm text-gray-700">
+          <span className="font-semibold text-gray-900">
+            {progress.completedCount} van {progress.totalCount}
+          </span>{' '}
+          stappen afgerond
+        </p>
+      </section>
+
       <div className="flex gap-8 overflow-x-auto border-b border-gray-200 px-6">
         {tabs.map((tab) => (
           <button
@@ -92,7 +136,7 @@ export function StappenplanOverzichtPanel({
       </div>
 
       <div className="border-b border-gray-100 px-6 py-5">
-        <div className="mb-4 flex flex-wrap gap-6">
+        <div className="flex flex-wrap gap-6">
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-semibold text-gray-900">Organisatie</span>
             <select
@@ -119,17 +163,6 @@ export function StappenplanOverzichtPanel({
               <option value="naam">Naam (A - Z)</option>
             </select>
           </label>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-200">
-            <div
-              className="h-full rounded-full bg-[#007AC8] transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <span className="shrink-0 text-sm text-gray-600">
-            {doneCount}/{totalCount} • {progress}%
-          </span>
         </div>
       </div>
 
@@ -159,9 +192,15 @@ export function StappenplanOverzichtPanel({
 
       <div className="divide-y divide-gray-200">
         {filteredRows.length === 0 ? (
-          <div className="px-6 py-10 text-center text-sm text-gray-600">
-            Geen taken in deze weergave.
-          </div>
+          activeTab === 'nog-te-doen' &&
+          tabRows['nog-te-doen'].length === 0 &&
+          organization === 'alle' ? (
+            <UserTasksCompleteMessage />
+          ) : (
+            <div className="px-6 py-10 text-center text-sm text-gray-600">
+              Geen taken in deze weergave.
+            </div>
+          )
         ) : (
           filteredRows.map((row) => (
             <StappenplanRow
@@ -195,4 +234,19 @@ function sortRows(rows: StappenplanRowModel[], sort: string): StappenplanRowMode
     return copy.sort((a, b) => a.title.localeCompare(b.title));
   }
   return copy;
+}
+
+function UserTasksCompleteMessage() {
+  return (
+    <div className="px-6 py-14 text-center">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
+        <CheckCircle2 className="h-7 w-7 text-green-600" aria-hidden />
+      </div>
+      <h3 className="text-lg font-bold text-gray-900">U hoeft op dit moment niets te doen</h3>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-gray-600">
+        Alle taken voor u zijn afgerond. Komt er weer iets op uw naam te staan, dan ziet u dat
+        hier terug.
+      </p>
+    </div>
+  );
 }

@@ -3,11 +3,14 @@ import {
   BEGELEIDING_STORAGE_KEY,
   DEFAULT_BEGELEIDING,
   DEFAULT_GEGEVENS,
+  DEFAULT_MELDINGEN,
   GEGEVENS_STORAGE_KEY,
+  MELDINGEN_STORAGE_KEY,
   ONBOARDING_STORAGE_KEY,
   normalizeGegevensProfiel,
   type BegeleidingsVoorkeur,
   type GegevensProfiel,
+  type MeldingenVoorkeur,
 } from '../types/begeleiding';
 
 export function useOnboarding() {
@@ -75,4 +78,27 @@ export function useBegeleidingsVoorkeur() {
   }, []);
 
   return { voorkeur, setVoorkeur, toggleOrgZelf };
+}
+
+export function useMeldingenVoorkeur() {
+  const [meldingen, setMeldingenState] = useState<MeldingenVoorkeur>(() => {
+    if (typeof window === 'undefined') return DEFAULT_MELDINGEN;
+    try {
+      const stored = window.localStorage.getItem(MELDINGEN_STORAGE_KEY);
+      if (stored) return { ...DEFAULT_MELDINGEN, ...JSON.parse(stored) };
+    } catch {
+      /* use default */
+    }
+    return DEFAULT_MELDINGEN;
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(MELDINGEN_STORAGE_KEY, JSON.stringify(meldingen));
+  }, [meldingen]);
+
+  const setMeldingen = useCallback((next: MeldingenVoorkeur) => {
+    setMeldingenState(next);
+  }, []);
+
+  return { meldingen, setMeldingen };
 }
