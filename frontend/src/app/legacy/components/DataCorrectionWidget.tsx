@@ -172,11 +172,13 @@ export function DataCorrectionWidget() {
         )}
 
         {submittedMessage ? (
-          <Alert className="border-green-200 bg-green-50 text-green-900">
-            <CheckCircle2 className="h-4 w-4" />
-            <AlertTitle>Uw gegevens zijn ontvangen</AlertTitle>
-            <AlertDescription>{submittedMessage}</AlertDescription>
-          </Alert>
+          <div className="space-y-4">
+            <Alert className="border-green-200 bg-green-50 text-green-900">
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertTitle>Uw gegevens zijn ontvangen</AlertTitle>
+              <AlertDescription>{submittedMessage}</AlertDescription>
+            </Alert>
+          </div>
         ) : (
           <form className="space-y-6" onSubmit={handleSubmit}>
             {discrepancies.map((item) => (

@@ -31,6 +31,14 @@ class Client(BaseModel):
     zorgtype: str                          # WLZ | WMO
     eigen_bijdrage_categorie: str          # LAAG | HOOG
     zorginstelling: Optional[Zorginstelling]
+    correspondentieadres: Optional[Adres]  # None = nog niet geregistreerd; brieven gaan naar zorginstelling
+
+
+class ClientUpdate(BaseModel):
+    zorgtype: Optional[str] = None
+    eigen_bijdrage_categorie: Optional[str] = None
+    correspondentieadres: Optional[Adres] = None
+    zorginstelling: Optional[Zorginstelling] = None
 
 
 class Factuur(BaseModel):
@@ -67,13 +75,14 @@ _ZORGINSTELLING = {
 }
 
 CLIENTEN: dict[str, dict] = {
-    # Truus / Cees — WLZ-client in zorginstelling
+    # Truus / Cees — WLZ-client in zorginstelling; correspondentieadres nog niet geregistreerd
     "111222333": {
         "client": {
             "bsn": "111222333",
             "zorgtype": "WLZ",
             "eigen_bijdrage_categorie": "HOOG",
             "zorginstelling": _ZORGINSTELLING,
+            "correspondentieadres": None,
         },
         "facturen": [
             {
@@ -113,6 +122,16 @@ def get_client(bsn: str):
     """Geeft de WLZ- of Wmo-clientgegevens terug voor het opgegeven BSN."""
     if bsn not in CLIENTEN:
         raise HTTPException(status_code=404, detail="Geen CAK-client gevonden voor dit BSN.")
+    return CLIENTEN[bsn]["client"]
+
+
+@app.patch("/clienten/{bsn}", response_model=Client)
+def update_client(bsn: str, update: ClientUpdate):
+    """Werkt clientgegevens bij voor het opgegeven BSN. Alleen meegestuurde velden worden overschreven."""
+    if bsn not in CLIENTEN:
+        raise HTTPException(status_code=404, detail="Geen CAK-client gevonden voor dit BSN.")
+    for field, value in update.model_dump(exclude_unset=True).items():
+        CLIENTEN[bsn]["client"][field] = value
     return CLIENTEN[bsn]["client"]
 
 

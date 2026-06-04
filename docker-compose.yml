@@ -1,0 +1,73 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      BACKEND_URL: http://backend:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend
+      MOCK_CAK_BASE_URL: http://mock-cak:8001
+      MOCK_RDW_BASE_URL: http://mock-rdw:8002
+      A2A_AGENT_URL: http://a2a:9999
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mock-cak
+      - mock-rdw
+      - a2a
+
+  mock-cak:
+    build:
+      context: ./mock-api
+      args:
+        SERVICE: cak
+    environment:
+      PORT: 8001
+    ports:
+      - "8001:8001"
+
+  mock-rdw:
+    build:
+      context: ./mock-api
+      args:
+        SERVICE: rdw
+    environment:
+      PORT: 8002
+    ports:
+      - "8002:8002"
+
+  mock-svb:
+    build:
+      context: ./mock-api
+      args:
+        SERVICE: svb
+    environment:
+      PORT: 8003
+    ports:
+      - "8003:8003"
+
+  a2a:
+    profiles:
+      - agents
+    build:
+      context: ./a2a
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      A2A_HOST: 0.0.0.0
+      A2A_PORT: 9999
+      A2A_PUBLIC_URL: http://a2a:9999
+    ports:
+      - "9999:9999"

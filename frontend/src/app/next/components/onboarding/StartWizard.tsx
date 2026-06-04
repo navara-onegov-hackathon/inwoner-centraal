@@ -100,6 +100,7 @@ export function StartWizard({
             {step === 'delegatie' && (
               <DelegatieStep
                 onSelfContinue={next}
+                onTogether={next}
                 onDelegate={setDelegatedTo}
                 onBack={back}
               />
