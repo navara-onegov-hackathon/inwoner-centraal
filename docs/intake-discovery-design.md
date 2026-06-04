@@ -10,12 +10,63 @@ This endpoint replaces the separate reconciliation widget flow for onboarding.
 It is meant to support the onboarding and intake journey, and to feed the
 existing overview UI shape as closely as possible.
 
+## Non-Negotiable Architecture
+
+This intake discovery flow is the heart of the product and must be genuinely
+agent-driven.
+
+That means:
+
+- an LLM agent determines which tools to call
+- an LLM agent inspects the returned OpenAPI documents
+- an LLM agent decides which concrete REST endpoint to call next, including
+  method, URL, query, and body
+- an LLM agent determines which processes are relevant
+- an LLM agent determines process state, required missing information, and
+  form needs
+- an LLM agent generates `ag-ui` form definitions when information is missing
+- an LLM agent derives and returns the normalized process output
+
+This explicitly means the backend must not contain:
+
+- hardcoded per-API endpoint selection logic for discovery
+- hardcoded per-process relevance logic
+- hardcoded per-organisation mapping logic that converts raw source data into
+  process applicability
+- manual data-conversion code that encodes business meaning the agent should
+  infer itself
+- hardcoded per-process form schemas
+- manual backend generation of `ag-ui` forms for specific organisations or
+  process types
+
+Adding a new API such as KvK should require only:
+
+- adding that API to the configured API registry data
+- adding its OpenAPI reference location
+- optionally updating the system prompt text if the product wants to describe
+  the API in words
+
+It must not require new discovery code branches for that organisation.
+
+The backend may still contain thin generic infrastructure for:
+
+- tool execution
+- SSE transport
+- OpenAI streaming
+- A2A transport
+- response validation
+- persistence of user-provided case data
+
+But the backend must not become a second rules engine for process relevance.
+The same applies to process form generation.
+
 ## Scope
 
 This design covers:
 
 - a new Django backend endpoint for intake discovery
 - SSE streaming of agent progress
+- OpenAI client streaming as the source of those progress events
 - a new system prompt for a dedicated intake discovery agent
 - generic REST API discovery and calling tools
 - A2A calls reusing existing backend logic
@@ -69,16 +120,22 @@ The backend immediately starts an SSE stream.
 
 While the request is running, the backend emits progress lines that explain
 what the agent is doing. These lines are shown in the UI instead of a spinner.
+These progress events come from the OpenAI streaming client and reflect the
+real agent run, not a scripted backend sequence.
+
+The progress log must be concrete and operational. It should mention the actual
+organisation, source, or check being performed, not vague phase labels.
 
 The backend agent:
 
 1. retrieves general information for the deceased case
-2. discovers which fixed processes are relevant
-3. injects configured always-include processes where applicable
-4. retrieves Belastingdienst letters through A2A
-5. derives additional dynamic processes from those letters
-6. generates process-level forms where required information is still missing
-7. normalizes everything into the final response shape
+2. inspects configured process data and available API/A2A registries
+3. chooses which APIs or A2A agents to call
+4. discovers the exact REST operations by reading OpenAPI documents
+5. retrieves Belastingdienst letters through A2A where relevant
+6. determines which fixed and dynamic processes are relevant
+7. generates process-level forms where required information is still missing
+8. returns the final normalized response shape
 
 ### Exit point
 
@@ -89,6 +146,10 @@ Only relevant processes are returned.
 
 Some processes may still be included even with limited live evidence, if the
 product intentionally wants them always present for the case type.
+
+The decision to include them still belongs to the agent, based on configured
+policy/process data. It must not be encoded as per-process conditional Python
+logic.
 
 ## Assistance Model
 
@@ -179,6 +240,9 @@ There are three process categories.
 These come from the predefined process list in
 [docs/challenge-processes.yaml](/Users/arnold/Projects/inwoner-centraal/docs/challenge-processes.yaml).
 
+This list should be moved into JSON configuration data for runtime use. The
+agent consumes that data as input.
+
 The agent evaluates whether each predefined process is relevant based on
 discovered data.
 
@@ -217,14 +281,76 @@ Rules:
 - they should explain that inclusion is policy- or case-driven if no live
   evidence is available
 
+This category also belongs in configuration data, not in hardcoded backend
+logic.
+
+## Configuration Data
+
+The runtime should treat the following as data, not code:
+
+- process registry
+- API registry
+- A2A registry
+
+Preferred direction:
+
+- `docs/challenge-processes.yaml` remains a human-edited source during design
+- runtime consumes JSON artifacts derived from that source
+- adding a new API or process source should be a configuration change
+
+Suggested JSON artifacts:
+
+- `backend/reconciliation/config/processes.json`
+- `backend/reconciliation/config/apis.json`
+- `backend/reconciliation/config/agents.json`
+
+### API registry data
+
+The API registry should contain, per API:
+
+- stable `id`
+- human name
+- base URL
+- OpenAPI JSON URL
+- short description for the prompt
+
+Example fields:
+
+- `id`
+- `name`
+- `base_url`
+- `openapi_url`
+- `description`
+
+### Process registry data
+
+The process registry should contain, per process:
+
+- stable `id`
+- organisation
+- label/title
+- notes to guide the agent
+- optional policy flags such as always-include
+
+The registry must not contain executable discovery code. It is guidance and
+policy input for the agent.
+
 ## Backend Tooling Model
 
 The backend owns the available REST APIs and A2A connections.
 
 The frontend does not receive or manage that list.
 
-The system prompt contains a static list of available APIs and a reference to
-their OpenAPI documentation.
+The system prompt contains a static list of available APIs and A2A endpoints,
+based on backend configuration data, and references to their OpenAPI
+documentation where applicable.
+
+The prompt must make it explicit that:
+
+- the agent is responsible for deciding which API to inspect
+- the agent is responsible for selecting which endpoint to call
+- the agent is responsible for choosing query/body values from case context
+- the backend must not hardcode those choices in domain-specific discovery code
 
 ### Generic REST tools
 
@@ -261,6 +387,8 @@ Behavior:
 Purpose:
 
 - one generic execution tool for all REST operations
+- the agent must decide the concrete operation; `call_api` must not hide
+  domain-specific endpoint selection in backend code
 
 ### A2A tool
 
@@ -289,6 +417,9 @@ The initial static API set in the prompt should match the current mock APIs:
 - RDW mock API
 - SVB mock API
 
+This set should be supplied from JSON configuration data, not hardcoded in the
+agent orchestration logic.
+
 Each API already exposes an OpenAPI schema:
 
 - CAK:
@@ -301,9 +432,22 @@ Each API already exposes an OpenAPI schema:
 The prompt should describe each API briefly and point the agent to the OpenAPI
 reference location.
 
+Future APIs such as KvK should be added by updating this registry data only.
+No organisation-specific discovery code should be necessary.
+
 ## Streaming Model
 
 The endpoint should use Server-Sent Events.
+
+The event stream must be driven by OpenAI client streaming.
+
+Recommended implementation direction:
+
+- use the OpenAI client streaming API in the backend
+- translate streaming events into SSE events for the frontend
+- surface tool-use progress and short natural-language status lines from the
+  actual agent run
+- do not simulate progress with scripted backend messages
 
 Recommended event types:
 
@@ -321,12 +465,24 @@ Human-readable line to show in the UI.
 
 Examples:
 
-- `Received deceased BSN`
-- `Discovering relevant APIs`
-- `Calling CAK API`
-- `Inspecting SVB partner profile`
-- `Retrieving Belastingdienst letters via A2A`
-- `Evaluating process relevance`
+- `Algemene gegevens van de overledene verzamelen`
+- `Voertuiginformatie opvragen bij de RDW`
+- `CAK-facturen en betaalstatus opvragen`
+- `Partner- en uitkeringsgegevens opvragen bij de SVB`
+- `Brieven opvragen bij de Belastingdienst`
+- `Controleren of erfbelasting van toepassing is`
+- `Bepalen of een RDW-proces nodig is`
+- `Nagaan of het postadres afwijkt`
+- `Ontbrekende gegevens bepalen voor voertuigoverschrijving`
+
+Avoid generic user-facing messages like:
+
+- `Discovery gestart`
+- `Relevante processen bepalen`
+- `Overzicht klaarzetten`
+
+Those may exist internally, but the frontend log should show the more specific
+action that the agent is actually performing.
 
 #### `tool_call_started`
 
@@ -354,12 +510,13 @@ The result should be close to the existing `OverzichtResponse`, but the domain
 model for processes should no longer depend on current frontend bucket names
 such as `taken` or `geen_actie_nodig`.
 
-The backend should normalize discovered data into a frontend-compatible shape
-while keeping the internal discovery model clearer.
+The agent should return discovered data already in the intended process model.
+The backend may do thin schema validation and transport adaptation, but it must
+not re-interpret domain meaning through manual mapping code.
 
 ### Recommended internal discovery model
 
-At normalization time, each relevant process should have fields like:
+Each relevant process should have fields like:
 
 - `id`
 - `organisation`
@@ -389,6 +546,14 @@ These forms should use the `ag-ui` format that is already described elsewhere
 in the product narrative, rather than introducing a separate custom form
 contract.
 
+This is not a backend-authored form library. The form definition itself must be
+generated by the agent from:
+
+- process context
+- configured process notes
+- discovered API and A2A context
+- already known reusable case data
+
 Examples:
 
 - missing bank account for a refund or payment arrangement
@@ -398,6 +563,9 @@ Examples:
 
 The form definition should be attached to the specific process that needs the
 information and should already be shaped for `ag-ui` consumption.
+
+The backend may validate that the returned structure is `ag-ui`-compatible, but
+it must not hardcode organisation-specific form construction logic.
 
 Recommended internal fields:
 
@@ -423,7 +591,8 @@ Each field should include:
 
 ### Mapping intent to current frontend shape
 
-The backend may still populate the existing overview fields expected by the UI:
+The final payload may still populate the existing overview fields expected by
+the UI:
 
 - `persona`
 - `samenvatting`
@@ -436,8 +605,9 @@ The backend may still populate the existing overview fields expected by the UI:
 - `verplichtingen`
 - `rechten`
 
-However, the normalization logic should not treat those buckets as the source
-of truth for discovery. They are presentation-oriented.
+However, those buckets are presentation-oriented compatibility output. They are
+not the source of truth for discovery, and they must not be produced by a
+hardcoded backend rules engine.
 
 This keeps room for later UI refactoring without rewriting agent logic.
 
@@ -494,7 +664,16 @@ The new system prompt should instruct the agent to:
 - emit those process forms in an `ag-ui`-compatible structure
 - use the generic REST and A2A tools, not imagined tools
 - explain progress in short operational steps
-- return structured output for backend normalization
+- return structured output that is already semantically correct, with backend
+  validation limited to schema and invariant enforcement
+
+The prompt should also make explicit that:
+
+- if a process needs user input, the agent should generate the required
+  `ag-ui` form itself
+- the backend will not supply hardcoded per-process forms
+- newly added APIs or processes should not require new backend form-building
+  code
 
 The prompt should also list:
 
@@ -503,26 +682,31 @@ The prompt should also list:
 - which A2A connection exists
 - key invariants such as the `deadline` xor `urgent` rule
 
-## Normalization Responsibilities
+## Validation Responsibilities
 
-The backend should not trust the LLM to emit perfectly frontend-ready objects.
+The backend should not trust the LLM blindly, but its role is validation, not
+domain discovery.
 
 Instead:
 
-1. the agent returns structured discovery output
-2. backend normalization code validates and reshapes it
-3. frontend receives the normalized final payload
+1. the agent returns structured discovery output and process decisions
+2. backend validation code checks schema and invariants
+3. backend performs only minimal compatibility shaping where required by the
+   existing frontend contract
+4. frontend receives the final payload
 
-Normalization should enforce:
+Validation should enforce:
 
 - English field names
 - `state` in the allowed enum
 - `handled_by` in `you | us`
 - `deadline` and `urgent` mutual exclusion
-- omission of irrelevant processes
+- omission of irrelevant processes if the agent included them by mistake
 - well-formed process form definitions when a `form` is present
 - `ag-ui` compatibility for every emitted process form
 - merging submitted process-form data into reusable case data
+
+Validation must not expand into manual backend form generation.
 
 ## New Endpoint
 
@@ -532,7 +716,6 @@ Recommended path:
 
 This endpoint:
 
-- accepts the deceased BSN and handling preference
 - accepts the deceased BSN and assistance preference
 - starts an SSE stream immediately
 - runs discovery and normalization
@@ -583,6 +766,9 @@ Each line should show a simple status icon:
 Only the current active line should show `pending`.
 
 When a new progress line starts, the previous current line becomes `done`.
+
+The line text should be specific enough that the user can understand which
+organisation or source is currently being consulted.
 
 The visual design can stay simple:
 
@@ -642,7 +828,8 @@ That work now belongs in the normal process model:
 The existing overview and stappenplan screens should continue to work with as
 few changes as possible.
 
-That means the backend should do most of the normalization work.
+That means the backend should do only the minimum compatibility work needed for
+the current UI.
 
 Frontend changes outside onboarding should mainly be limited to:
 
@@ -697,7 +884,7 @@ The intended onboarding interaction becomes:
 1. user reaches the `agentPlan` step
 2. frontend starts intake discovery with deceased BSN and `assistance`
 3. frontend opens and listens to the SSE stream
-4. frontend appends progress lines to the log card
+4. frontend appends concrete progress lines to the log card
 5. frontend marks prior lines as done when newer progress lines arrive
 6. frontend stores the final result payload when the `result` event arrives
 7. frontend enables `Verder`
@@ -720,8 +907,8 @@ The intended onboarding interaction becomes:
 - reuse or wrap
   [backend/reconciliation/a2a_client.py](/Users/arnold/Projects/inwoner-centraal/backend/reconciliation/a2a_client.py:1)
   for Belastingdienst letter retrieval
-- add normalization logic, for example:
-  - `backend/reconciliation/intake_normalization.py`
+- add validation and minimal compatibility-shaping logic, for example:
+  - `backend/reconciliation/intake_validation.py`
 - add reusable case-data persistence for submitted process form data, for
   example:
   - `backend/reconciliation/intake_case_data.py`
@@ -733,16 +920,20 @@ The intended onboarding interaction becomes:
   as the fixed process reference
 - add explicit always-include process configuration if needed, either in the
   same YAML or in a nearby companion config
-- optionally add static API registry configuration, for example:
-  - `backend/reconciliation/intake_api_registry.py`
+- add JSON-backed API registry configuration, for example:
+  - `backend/reconciliation/config/apis.json`
+- add JSON-backed A2A registry configuration, for example:
+  - `backend/reconciliation/config/agents.json`
+- add JSON-backed process registry artifacts, for example:
+  - `backend/reconciliation/config/processes.json`
 
 ## Risks and Tradeoffs
 
 ### Prompt complexity
 
 The intake agent has more responsibility than the current Belastingdienst A2A
-agent. The backend should therefore keep normalization and validation logic in
-code rather than in prompt text alone.
+agent. The backend should therefore keep validation and invariant checks in
+code, while keeping process meaning and relevance decisions inside the agent.
 
 ### Generic API tool freedom
 
@@ -762,20 +953,28 @@ Process-scoped forms add flexibility, but they also introduce a second kind of
 output next to the process itself. Validation and persistence rules should stay
 strict so that collected data remains reusable and trustworthy.
 
+The mitigation is not to hand-author forms in backend code. The mitigation is:
+
+- better process notes
+- clearer API registry descriptions
+- stronger prompt instructions
+- strict `ag-ui` validation
+
 ### Dynamic process duplication
 
 Belastingdienst letters may imply processes already covered by fixed YAML
-processes. The normalization layer should merge duplicates where possible.
+processes. The agent should merge duplicates where possible, and backend
+validation may reject obviously duplicated output.
 
 ## Recommended Delivery Order
 
 1. add backend route and SSE view skeleton
 2. implement event streaming helper
-3. implement static API registry and `discover_api`
+3. add JSON API/A2A/process registries
 4. implement generic `call_api`
 5. reuse A2A client logic for Belastingdienst calls
 6. implement new system prompt and orchestration loop
-7. implement normalization and invariants
+7. implement OpenAI streaming plus validation and invariants
 8. rework the `agentPlan` onboarding step into a streamed progress log
 9. remove the separate reconciliation widget and fold that work into normal
    process rendering
@@ -789,11 +988,13 @@ The implementation is successful when:
 - the frontend can start intake discovery with a deceased BSN
 - the UI receives streaming progress lines over SSE
 - the `agentPlan` step shows a simple progress log with pending and done states
+- the streamed log lines are concrete and organisation-specific rather than
+  generic discovery placeholders
 - the `Verder` button stays disabled until discovery completes
-- the backend discovers general case information
-- the backend returns only relevant fixed processes
-- the backend includes configured always-include processes where intended
-- the backend adds relevant dynamic Belastingdienst-derived processes
+- the agent discovers general case information
+- the agent returns only relevant fixed processes
+- the agent includes configured always-include processes where intended
+- the agent adds relevant dynamic Belastingdienst-derived processes
 - missing process data can be returned as process-scoped form definitions
 - submitted process form data can be reused in later steps
 - each returned process uses the English backend contract
