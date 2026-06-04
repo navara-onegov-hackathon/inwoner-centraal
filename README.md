@@ -120,8 +120,8 @@ An important feature of the platform is that other organisations do not need to 
 
 Instead, the platform:
 
+- supports agent-to-agent communication for future proof organisations
 - consumes existing APIs where available
-- supports agent-to-agent communication where direct APIs are not available
 - interprets existing letters or structured records
 - normalizes the information into one shared case model
 - resolves partial overlap between sources
