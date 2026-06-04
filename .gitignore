@@ -41,6 +41,14 @@ db.sqlite3-journal
 htmlcov/
 .pnpm-store/
 
+# Cursor / AI agent (local session artefacts; keep shared project config)
+.cursor
+
+# Agent-generated documentation
+/docs/
+CONTEXT.md
+CONTEXT-MAP.md
+
 # OS/editor
 .DS_Store
 .idea/
