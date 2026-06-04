@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 try:
@@ -130,6 +131,16 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+MOCK_CAK_BASE_URL = os.getenv('MOCK_CAK_BASE_URL', 'http://127.0.0.1:8001')
+MOCK_RDW_BASE_URL = os.getenv('MOCK_RDW_BASE_URL', 'http://127.0.0.1:8002')
+MOCK_API_TIMEOUT_SECONDS = float(os.getenv('MOCK_API_TIMEOUT_SECONDS', '2'))
+GREENPT_TIMEOUT_SECONDS = float(os.getenv('GREENPT_TIMEOUT_SECONDS', '10'))
+
+DEMO_DECEASED_BSN = os.getenv('DEMO_DECEASED_BSN', '111222333')
+DEMO_DECEASED_NAME = os.getenv('DEMO_DECEASED_NAME', 'Cees de Vries')
+DEMO_SURVIVING_PARTNER_BSN = os.getenv('DEMO_SURVIVING_PARTNER_BSN', '999888777')
+DEMO_SURVIVING_PARTNER_NAME = os.getenv('DEMO_SURVIVING_PARTNER_NAME', 'Truus de Vries')
 
 LOGGING = {
     'version': 1,

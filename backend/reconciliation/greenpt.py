@@ -3,6 +3,8 @@ import logging
 import os
 from json import JSONDecodeError
 
+from django.conf import settings
+
 
 GREENPT_BASE_URL = 'https://api.greenpt.ai/v1'
 GREENPT_MODEL = 'gemma4'
@@ -23,6 +25,16 @@ def _extract_json(content):
 
 def analyze_with_greenpt(aggregated_data, fallback_discrepancies):
     """Use GreenPT to review discrepancies, with a safe local fallback."""
+    if not fallback_discrepancies:
+        logger.info('GreenPT skipped: no discrepancies detected.')
+        return {
+            'discrepancies': [],
+            'greenpt': {
+                'used': False,
+                'reason': 'No discrepancies detected.',
+            },
+        }
+
     api_key = os.getenv('GREENPT_API_KEY')
     if not api_key:
         logger.info('GreenPT skipped: GREENPT_API_KEY is not set.')
@@ -70,6 +82,7 @@ def analyze_with_greenpt(aggregated_data, fallback_discrepancies):
             model=GREENPT_MODEL,
             messages=[{'role': 'user', 'content': prompt}],
             temperature=0.2,
+            timeout=settings.GREENPT_TIMEOUT_SECONDS,
         )
         content = response.choices[0].message.content or ''
         logger.info('GreenPT raw output: %s', content)
