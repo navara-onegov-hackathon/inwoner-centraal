@@ -6,9 +6,9 @@ Add a new backend endpoint for intake discovery that starts from a deceased
 BSN, gathers relevant government and agent data, determines which processes
 apply, and streams progress updates to the frontend while the work is running.
 
-This endpoint is separate from the existing data reconciliation flow. It is
-meant to support the onboarding and intake journey, and to feed the existing
-overview UI shape as closely as possible.
+This endpoint replaces the separate reconciliation widget flow for onboarding.
+It is meant to support the onboarding and intake journey, and to feed the
+existing overview UI shape as closely as possible.
 
 ## Scope
 
@@ -21,6 +21,8 @@ This design covers:
 - A2A calls reusing existing backend logic
 - process discovery from both fixed process definitions and dynamic
   Belastingdienst letters
+- generated per-process form definitions for missing required information
+- storage of newly collected process data for reuse in later processes
 - normalization of discovered output into an English backend data contract
 
 This design does not cover:
@@ -72,9 +74,11 @@ The backend agent:
 
 1. retrieves general information for the deceased case
 2. discovers which fixed processes are relevant
-3. retrieves Belastingdienst letters through A2A
-4. derives additional dynamic processes from those letters
-5. normalizes everything into the final response shape
+3. injects configured always-include processes where applicable
+4. retrieves Belastingdienst letters through A2A
+5. derives additional dynamic processes from those letters
+6. generates process-level forms where required information is still missing
+7. normalizes everything into the final response shape
 
 ### Exit point
 
@@ -82,6 +86,9 @@ The final SSE `result` event returns a normalized structured payload for the
 frontend.
 
 Only relevant processes are returned.
+
+Some processes may still be included even with limited live evidence, if the
+product intentionally wants them always present for the case type.
 
 ## Assistance Model
 
@@ -155,12 +162,17 @@ Example:
 - incorrect correspondence address: `urgent: true`
 - tax declaration due on a specific date: `deadline`
 
+Address mismatches are especially important. If an organisation is expected to
+send important or time-sensitive post and the current correspondence address
+looks wrong or incomplete, that should usually surface as an urgent process
+step.
+
 Urgency display and relative phrases like "due in 2 weeks" are derived later
 in code or UI and are out of scope for this implementation.
 
 ## Process Sources
 
-There are two process categories.
+There are three process categories.
 
 ### Fixed processes
 
@@ -187,6 +199,23 @@ Dynamic processes must:
 - be backed by at least one concrete letter
 - follow the same state and urgency rules as fixed processes
 - merge with a fixed process if they are clearly the same underlying step
+
+### Always-include processes
+
+These are intentionally included even when there is no current API integration
+or no direct live evidence yet.
+
+This matters especially for organisations such as the gemeente, where the demo
+may still want to show a meaningful step even if the backend cannot yet
+discover it from a live source.
+
+Rules:
+
+- these are explicitly configured, not hallucinated by the agent
+- they should still be normalized into the same process model
+- they may start in `open`, `blocked`, or `pending`, depending on known rules
+- they should explain that inclusion is policy- or case-driven if no live
+  evidence is available
 
 ## Backend Tooling Model
 
@@ -344,11 +373,53 @@ At normalization time, each relevant process should have fields like:
 - `available_from`
 - `reason`
 - `evidence`
+- `form`
 
 Where:
 
 - `handled_by` is `you` or `us`
 - `deadline` and `urgent` are mutually exclusive
+
+### Process-level form definitions
+
+If a process requires information that is not yet known, the agent should also
+return a generated form definition for that process.
+
+These forms should use the `ag-ui` format that is already described elsewhere
+in the product narrative, rather than introducing a separate custom form
+contract.
+
+Examples:
+
+- missing bank account for a refund or payment arrangement
+- missing contact person details
+- missing correspondence address
+- missing vehicle transfer details
+
+The form definition should be attached to the specific process that needs the
+information and should already be shaped for `ag-ui` consumption.
+
+Recommended internal fields:
+
+- `form.id`
+- `form.title`
+- `form.description`
+- `form.fields`
+- `form.submit_label`
+
+If `ag-ui` requires additional wrapper or metadata fields, those should be part
+of the backend contract as well. The important requirement is that the backend
+emits an `ag-ui`-compatible structure directly.
+
+Each field should include:
+
+- `name`
+- `label`
+- `type`
+- `required`
+- optional `placeholder`
+- optional `prefill`
+- optional `options`
 
 ### Mapping intent to current frontend shape
 
@@ -369,6 +440,21 @@ However, the normalization logic should not treat those buckets as the source
 of truth for discovery. They are presentation-oriented.
 
 This keeps room for later UI refactoring without rewriting agent logic.
+
+### Shared data storage
+
+Collected data from generated process forms should be stored as reusable case
+data, not only as answers for one single process.
+
+That stored data should be combined with the standard discovered case data for
+future process evaluation and future generated forms.
+
+Examples:
+
+- if the user supplies a correspondence address once, that can be reused for
+  later address-related processes
+- if the user supplies a bank account once, it can be reused by later refund or
+  payment-related processes
 
 ## General Information Block
 
@@ -400,9 +486,12 @@ The new system prompt should instruct the agent to:
 - start from the deceased BSN
 - gather general information first
 - inspect the predefined process list
+- add configured always-include processes where applicable
 - determine only relevant fixed processes
 - retrieve Belastingdienst letters through A2A
 - derive additional relevant dynamic processes from those letters
+- generate process-level form definitions when required information is missing
+- emit those process forms in an `ag-ui`-compatible structure
 - use the generic REST and A2A tools, not imagined tools
 - explain progress in short operational steps
 - return structured output for backend normalization
@@ -431,6 +520,9 @@ Normalization should enforce:
 - `handled_by` in `you | us`
 - `deadline` and `urgent` mutual exclusion
 - omission of irrelevant processes
+- well-formed process form definitions when a `form` is present
+- `ag-ui` compatibility for every emitted process form
+- merging submitted process-form data into reusable case data
 
 ## New Endpoint
 
@@ -464,6 +556,8 @@ The goal is:
 - make the onboarding work with live intake discovery
 - keep the rest of the current frontend functioning with minimal disruption
 - avoid broad UI redesign outside the `agentPlan` step
+- remove the separate reconciliation widget and model that work as normal
+  process steps instead
 
 ### Rework the `agentPlan` step
 
@@ -527,7 +621,21 @@ Recommended minimal frontend changes:
   (`maximaal | zelf | keuze`) to the English backend contract
 - add a small client utility or hook for the intake discovery SSE stream
 - store the final discovery result and pass it into the existing overview flow
+- render generated process forms inside normal process detail or step UI
+- render those generated forms through the existing or intended `ag-ui` path
+- persist submitted form data so it can be reused by later processes
 - preserve the existing overview UI where possible
+
+### Remove the separate reconciliation widget
+
+The separate reconciliation widget should be removed from the overview.
+
+That work now belongs in the normal process model:
+
+- address checks become normal process steps
+- missing required information becomes normal process steps with forms
+- corrections should no longer live in a standalone widget outside the main
+  process flow
 
 ### Overview compatibility
 
@@ -540,6 +648,7 @@ Frontend changes outside onboarding should mainly be limited to:
 
 - adapting to renamed or newly required fields
 - handling `state`, `handled_by`, `deadline`, and `urgent` consistently
+- supporting optional process `form` definitions
 - tolerating the absence of currently irrelevant presentation buckets where the
   backend now omits them
 
@@ -557,6 +666,24 @@ Likely touch points:
   [frontend/src/app/next/types/begeleiding.ts](/Users/arnold/Projects/inwoner-centraal/frontend/src/app/next/types/begeleiding.ts:1)
 - overview loading hook in
   [frontend/src/app/next/hooks/useOverzicht.ts](/Users/arnold/Projects/inwoner-centraal/frontend/src/app/next/hooks/useOverzicht.ts:1)
+- existing reconciliation UI components should be removed or folded into normal
+  process rendering
+
+### Address step behavior
+
+Address checking is a first-class process step.
+
+If an address mismatch is found and important post is expected from the
+organisation, the process may be marked urgent.
+
+Expected behavior:
+
+- the process appears in the normal steps list
+- the user can choose to update the correspondence address with a single action
+- if `assistance == "max"`, the system may perform the address update directly
+  where supported
+- if no direct API update is possible, the step may still be shown with the
+  required action or form
 
 ## Frontend-Backend Interaction
 
@@ -590,12 +717,17 @@ The intended onboarding interaction becomes:
   for Belastingdienst letter retrieval
 - add normalization logic, for example:
   - `backend/reconciliation/intake_normalization.py`
+- add reusable case-data persistence for submitted process form data, for
+  example:
+  - `backend/reconciliation/intake_case_data.py`
 
 ### Docs and configuration
 
 - keep
   [docs/challenge-processes.yaml](/Users/arnold/Projects/inwoner-centraal/docs/challenge-processes.yaml)
   as the fixed process reference
+- add explicit always-include process configuration if needed, either in the
+  same YAML or in a nearby companion config
 - optionally add static API registry configuration, for example:
   - `backend/reconciliation/intake_api_registry.py`
 
@@ -619,6 +751,12 @@ The current frontend still thinks in `taken`, `geen_actie_nodig`, and related
 buckets. The backend should treat those as compatibility output, not as the
 long-term domain model.
 
+### Form growth
+
+Process-scoped forms add flexibility, but they also introduce a second kind of
+output next to the process itself. Validation and persistence rules should stay
+strict so that collected data remains reusable and trustworthy.
+
 ### Dynamic process duplication
 
 Belastingdienst letters may imply processes already covered by fixed YAML
@@ -634,7 +772,10 @@ processes. The normalization layer should merge duplicates where possible.
 6. implement new system prompt and orchestration loop
 7. implement normalization and invariants
 8. rework the `agentPlan` onboarding step into a streamed progress log
-9. wire final result to the existing frontend overview shape
+9. remove the separate reconciliation widget and fold that work into normal
+   process rendering
+10. add generated process-form support and reusable case-data persistence
+11. wire final result to the existing frontend overview shape
 
 ## Success Criteria
 
@@ -646,8 +787,13 @@ The implementation is successful when:
 - the `Verder` button stays disabled until discovery completes
 - the backend discovers general case information
 - the backend returns only relevant fixed processes
+- the backend includes configured always-include processes where intended
 - the backend adds relevant dynamic Belastingdienst-derived processes
+- missing process data can be returned as process-scoped form definitions
+- submitted process form data can be reused in later steps
 - each returned process uses the English backend contract
 - `deadline` and `urgent` never appear together
+- address mismatch handling is part of the normal process flow, not a separate
+  widget
 - the final payload can feed the current overview UI with minimal frontend
   change
