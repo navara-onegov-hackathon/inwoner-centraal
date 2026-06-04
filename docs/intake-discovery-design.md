@@ -679,9 +679,14 @@ organisation, the process may be marked urgent.
 Expected behavior:
 
 - the process appears in the normal steps list
-- the user can choose to update the correspondence address with a single action
-- if `assistance == "max"`, the system may perform the address update directly
-  where supported
+- if `assistance == "max"`, the system should pick this up and update the
+  correspondence address directly where supported, so the user does not get a
+  separate keep-or-change choice
+- if `assistance == "partial"` or `assistance == "none"`, the user can choose
+  either to update the correspondence address or to keep it as-is
+- if the user explicitly chooses to keep the current address as-is in
+  `partial` or `none`, the step can still be completed without taking an
+  address-change action
 - if no direct API update is possible, the step may still be shown with the
   required action or form
 

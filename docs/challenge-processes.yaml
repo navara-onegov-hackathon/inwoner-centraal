@@ -6,6 +6,14 @@ assumptions:
   scope: "Only challenge-backed government processes from briefing, docs, and synthetic data"
   demo_non_challenge_backed_processes_default_to_not_applicable: true
 
+behavior_notes:
+  address_mismatch_resolution: >
+    If an address mismatch becomes a process step, then assistance=max means the
+    system should update the address directly where supported. For
+    assistance=partial or assistance=none, the user may choose either to change
+    the address or to keep it as-is; choosing to keep it as-is still completes
+    the step.
+
 discovery_inputs:
   - overledene
   - partner
