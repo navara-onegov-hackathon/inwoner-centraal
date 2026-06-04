@@ -1,4 +1,3 @@
-import { Switch } from '@radix-ui/react-switch';
 import { useState } from 'react';
 
 export function Settings() {
