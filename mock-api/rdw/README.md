@@ -23,6 +23,7 @@ OpenAPI schema: http://localhost:8002/openapi.json
 | GET | `/voertuigen/{kenteken}` | Voertuiggegevens en huidige tenaamstelling |
 | GET | `/houders/{bsn}/voertuigen` | Alle voertuigen op naam van een BSN |
 | POST | `/voertuigen/{kenteken}/tenaamstelling` | Eigendomsoverdracht (erfrecht, verkoop, schenking) |
+| POST | `/voertuigen/{kenteken}/vrijwaren` | Vrijwaring van de huidige tenaamstelling |
 | PATCH | `/voertuigen/{kenteken}/adres` | Adreswijziging van de huidige houder |
 
 Onbekende kentekens geven HTTP 404.
@@ -35,6 +36,8 @@ Onbekende kentekens geven HTTP 404.
 | Overige BSN's | Truus, Marcus, Anneke, Selim | Geen voertuig geregistreerd |
 
 Na een `POST /voertuigen/BN-ZF-92/tenaamstelling` met rechtsgrond `ERFRECHT` staat het voertuig op naam van de nieuwe houder (bijv. Truus).
+
+Na een `POST /voertuigen/BN-ZF-92/vrijwaren` verandert de tenaamstellingstatus naar `VRIJWARING` en staat het voertuig niet meer onder de oude houder-index.
 
 ---
 
@@ -69,9 +72,10 @@ Het native schema bevat een `verplichtingen`- en `correspondentie`-object per or
 
 ### Schrijfoperaties
 
-Het native schema is volledig read-only (gegenereerde data). De RDW API voegt twee schrijfoperaties toe die niet in het native schema bestaan:
+Het native schema is volledig read-only (gegenereerde data). De RDW API voegt drie schrijfoperaties toe die niet in het native schema bestaan:
 
 - `POST /voertuigen/{kenteken}/tenaamstelling` — formele eigendomsoverdracht met `rechtsgrond` (`ERFRECHT` | `VERKOOP` | `SCHENKING`). Dit is een expliciete rechtshandeling, geen generieke PATCH.
+- `POST /voertuigen/{kenteken}/vrijwaren` — beeindigt de actieve tenaamstelling zonder een nieuwe houder te registreren.
 - `PATCH /voertuigen/{kenteken}/adres` — adreswijziging van de huidige houder.
 
 ### Velden niet aanwezig in de RDW API

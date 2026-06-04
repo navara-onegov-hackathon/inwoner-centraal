@@ -140,6 +140,31 @@ def overdracht_tenaamstelling(kenteken: str, verzoek: TenaamstellingVerzoek):
     return voertuig
 
 
+@app.post("/voertuigen/{kenteken}/vrijwaren", response_model=Voertuig)
+def vrijwaar_voertuig(kenteken: str):
+    """
+    Verwerkt vrijwaring voor het opgegeven kenteken.
+    Dit beeindigt de actieve tenaamstelling zonder een nieuwe houder te registreren.
+    """
+    kenteken = kenteken.upper()
+    if kenteken not in VOERTUIGEN:
+        raise HTTPException(status_code=404, detail="Kenteken niet gevonden.")
+
+    voertuig = VOERTUIGEN[kenteken]
+    oude_bsn = voertuig["tenaamstelling"]["houder_bsn"]
+
+    voertuig["tenaamstelling"] = {
+        **voertuig["tenaamstelling"],
+        "datum_tenaamstelling": datetime.now(timezone.utc).isoformat(),
+        "status": "VRIJWARING",
+    }
+
+    if oude_bsn in _HOUDER_INDEX:
+        _HOUDER_INDEX[oude_bsn] = [k for k in _HOUDER_INDEX[oude_bsn] if k != kenteken]
+
+    return voertuig
+
+
 @app.patch("/voertuigen/{kenteken}/adres", response_model=Voertuig)
 def wijzig_adres(kenteken: str, wijziging: AdresWijziging):
     """Wijzigt het correspondentieadres van de huidige houder voor het opgegeven kenteken."""

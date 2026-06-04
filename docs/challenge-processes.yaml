@@ -258,6 +258,13 @@ processes:
   - id: rdw-overschrijven
     organisation: RDW
     process: Voertuig overschrijven of vrijwaring regelen
+    note: >
+      Laat de gebruiker kiezen tussen overschrijven en vrijwaren. Ontdek de
+      benodigde invoer vanuit de RDW OpenAPI: voor tenaamstelling zijn onder
+      meer nieuw_houder_bsn en nieuw_houder_naam vereist; voor vrijwaren is
+      geen extra invoer nodig. Bepaal de rechtsgrond waar mogelijk vanuit de
+      context, meestal ERFRECHT bij overlijden, en vraag hier alleen naar als
+      dat echt niet afleidbaar is.
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'RDW.S-1712'"
