@@ -52,6 +52,23 @@ if __name__ == '__main__':
         ],
     )
 
+    skill_address_check = AgentSkill(
+        id='check_address_mismatch',
+        name='Adrescontrole voor brieven',
+        description=(
+            'Controleer of er brieven voor een BSN zijn gestuurd naar een afwijkend adres '
+            'ten opzichte van het bekende adres. '
+            'Invoer is JSON: {"bsn": "<bsn>", "query": "controleer postcode <postcode> huisnummer <huisnummer>"}.'
+        ),
+        input_modes=['application/json'],
+        output_modes=['application/json'],
+        tags=['belastingdienst', 'brieven', 'adres', 'mismatch'],
+        examples=[
+            '{"bsn": "100407560", "query": "controleer postcode 5787ZP huisnummer 15"}',
+            '{"bsn": "105593199", "query": "is postcode 1231 IM huisnummer 156 correct voor alle brieven?"}',
+        ],
+    )
+
     public_agent_card = AgentCard(
         name='Belastingdienst Brieven Agent',
         description=(
@@ -68,7 +85,7 @@ if __name__ == '__main__':
                 url='http://127.0.0.1:9999',
             )
         ],
-        skills=[skill_lookup],
+        skills=[skill_lookup, skill_address_check],
     )
 
     extended_agent_card = AgentCard(
@@ -87,7 +104,7 @@ if __name__ == '__main__':
                 url='http://127.0.0.1:9999',
             )
         ],
-        skills=[skill_lookup, skill_filter],
+        skills=[skill_lookup, skill_filter, skill_address_check],
     )
 
     request_handler = DefaultRequestHandler(

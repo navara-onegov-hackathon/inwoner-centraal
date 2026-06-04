@@ -35,6 +35,13 @@ class Brief(BaseModel):
     wettelijke_reactietermijn_dagen: Optional[int] = None
 
 
+class AddressMismatchResult(BaseModel):
+    mismatch: bool
+    verwacht_adres: dict[str, str]
+    afwijkende_brieven: list[dict]
+    count: int
+
+
 class BriefRepository:
     """Loads Belastingdienst correspondence from a JSONL file and provides query methods."""
 
@@ -74,3 +81,35 @@ class BriefRepository:
     def list_bsn_numbers(self) -> list[str]:
         """Return all unique BSN numbers present in the dataset."""
         return list(self._by_bsn.keys())
+
+    def check_address_mismatch(
+        self, bsn: str, postcode: str, huisnummer: str
+    ) -> AddressMismatchResult:
+        """Check whether any letters for the BSN were sent to a different address.
+
+        Comparison is based on postcode + huisnummer only, normalised
+        (spaces stripped, lowercased on both sides).
+        """
+        def _norm(s: str) -> str:
+            return s.replace(' ', '').lower()
+
+        norm_postcode = _norm(postcode)
+        norm_huisnummer = _norm(huisnummer)
+
+        afwijkende: list[dict] = []
+        for brief in self.get_by_bsn(bsn):
+            if (
+                _norm(brief.adres.postcode) != norm_postcode
+                or _norm(brief.adres.huisnummer) != norm_huisnummer
+            ):
+                afwijkende.append({
+                    'brief': brief.model_dump(mode='json'),
+                    'adres': brief.adres.model_dump(),
+                })
+
+        return AddressMismatchResult(
+            mismatch=len(afwijkende) > 0,
+            verwacht_adres={'postcode': postcode, 'huisnummer': huisnummer},
+            afwijkende_brieven=afwijkende,
+            count=len(afwijkende),
+        )

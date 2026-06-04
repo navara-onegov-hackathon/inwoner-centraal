@@ -108,6 +108,32 @@ _TOOLS: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        'type': 'function',
+        'function': {
+            'name': 'check_address_mismatch',
+            'description': (
+                'Controleer of er brieven zijn voor een BSN die naar een afwijkend adres zijn '
+                'gestuurd ten opzichte van het opgegeven adres (postcode + huisnummer). '
+                'Retourneert een overzicht van afwijkende brieven en een mismatch-vlag.'
+            ),
+            'parameters': {
+                'type': 'object',
+                'properties': {
+                    'bsn': {'type': 'string', 'description': 'BSN van de overledene.'},
+                    'postcode': {
+                        'type': 'string',
+                        'description': 'Verwachte postcode (bijv. "5787ZP" of "5787 ZP").',
+                    },
+                    'huisnummer': {
+                        'type': 'string',
+                        'description': 'Verwacht huisnummer.',
+                    },
+                },
+                'required': ['bsn', 'postcode', 'huisnummer'],
+            },
+        },
+    },
 ]
 
 
@@ -157,6 +183,11 @@ class BelastingdienstAgentExecutor(AgentExecutor):
             results = repo.get_by_type(args['bsn'], args['brief_type'])
         elif name == 'get_by_brief_code':
             results = repo.get_by_brief_code(args['bsn'], args['brief_code'])
+        elif name == 'check_address_mismatch':
+            mismatch_result = repo.check_address_mismatch(
+                args['bsn'], args['postcode'], args['huisnummer']
+            )
+            return [mismatch_result.model_dump(mode='json')]
         else:
             results = []
         return [b.model_dump(mode='json') for b in results]
@@ -203,20 +234,28 @@ class BelastingdienstAgentExecutor(AgentExecutor):
         choice = response.choices[0]
 
         # 4. Dispatch all tool calls (may be multiple)
-        all_brieven: list[dict[str, Any]] = []
+        all_results: list[dict[str, Any]] = []
+        called_tools: set[str] = set()
         if choice.finish_reason == 'tool_calls' and choice.message.tool_calls:
             for tool_call in choice.message.tool_calls:
                 fn_name = tool_call.function.name
                 fn_args = json.loads(tool_call.function.arguments)
-                all_brieven.extend(self._dispatch_tool(fn_name, fn_args))
-            # Deduplicate by id while preserving order
-            seen: set[str] = set()
-            unique_brieven = []
-            for b in all_brieven:
-                if b['id'] not in seen:
-                    seen.add(b['id'])
-                    unique_brieven.append(b)
-            result = json.dumps({'brieven': unique_brieven, 'count': len(unique_brieven)}, ensure_ascii=False)
+                called_tools.add(fn_name)
+                all_results.extend(self._dispatch_tool(fn_name, fn_args))
+
+            if 'check_address_mismatch' in called_tools:
+                # Emit the dedicated mismatch shape
+                mismatch_data = next(r for r in all_results if 'mismatch' in r)
+                result = json.dumps(mismatch_data, ensure_ascii=False)
+            else:
+                # Deduplicate brieven by id while preserving order
+                seen: set[str] = set()
+                unique_brieven = []
+                for b in all_results:
+                    if b['id'] not in seen:
+                        seen.add(b['id'])
+                        unique_brieven.append(b)
+                result = json.dumps({'brieven': unique_brieven, 'count': len(unique_brieven)}, ensure_ascii=False)
         else:
             # LLM responded without tool use — wrap text response
             text = choice.message.content or ''
