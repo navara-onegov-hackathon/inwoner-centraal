@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react';
+import { Loader2, Printer } from 'lucide-react';
 import { useMemo } from 'react';
 import { DataCorrectionBlock } from '../../../shared/components/DataCorrectionBlock';
 import { applyPartitionToOverzicht } from '../../lib/partitionOverzicht';
@@ -48,7 +48,17 @@ export function OverzichtPage({ voorkeur }: OverzichtPageProps) {
         <span className="font-semibold text-gray-900">Nabestaande</span>
       </nav>
 
-      <h1 className="mb-8 text-[2rem] font-bold leading-tight text-gray-900">Stappenplan</h1>
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-[2rem] font-bold leading-tight text-gray-900">Stappenplan</h1>
+        <button
+          type="button"
+          onClick={() => alert('Nog te implementeren')}
+          className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+        >
+          <Printer className="h-4 w-4" aria-hidden />
+          Afdrukken
+        </button>
+      </div>
 
       <DataCorrectionBlock />
 
