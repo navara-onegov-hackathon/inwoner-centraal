@@ -14,7 +14,7 @@ def build_discrepancies(aggregated_data):
             'status': 'needs_confirmation' if source_data.get('address') else 'missing',
         }
         for source_key, source_data in sources.items()
-        if source_key in {'cak', 'rdw'}
+        if source_key in {'cak', 'rdw', 'belastingdienst'}
     ]
     known_addresses = [source['value'] for source in address_sources if source['value']]
     unique_addresses = set(known_addresses)

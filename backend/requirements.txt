@@ -1,5 +1,7 @@
 Django==4.2.30
+a2a-sdk>=1.0.3
 fastapi==0.115.0
+httpx>=0.28.1
 openai>=1.0.0
 python-dotenv>=1.1.0
 uvicorn==0.30.6

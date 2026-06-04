@@ -19,11 +19,13 @@ services:
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend
       MOCK_CAK_BASE_URL: http://mock-cak:8001
       MOCK_RDW_BASE_URL: http://mock-rdw:8002
+      A2A_AGENT_URL: http://a2a:9999
     ports:
       - "8000:8000"
     depends_on:
       - mock-cak
       - mock-rdw
+      - a2a
 
   mock-cak:
     build:
@@ -66,6 +68,6 @@ services:
     environment:
       A2A_HOST: 0.0.0.0
       A2A_PORT: 9999
-      A2A_PUBLIC_URL: http://localhost:9999
+      A2A_PUBLIC_URL: http://a2a:9999
     ports:
       - "9999:9999"

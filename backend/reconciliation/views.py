@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
+from .a2a_client import A2AClientError, build_belastingdienst_source, get_reconciliation_data
 from .analysis import build_discrepancies
 from .demo_state import get_confirmed_corrections, remember_confirmed_address
 from .greenpt import analyze_with_greenpt
@@ -30,9 +31,18 @@ def _build_reconciliation_payload():
         tool_results,
         confirmed_corrections=get_confirmed_corrections(),
     )
+
+    cak_address = (aggregated_data['sources'].get('cak') or {}).get('address') or {}
+    brieven_result, mismatch_result = get_reconciliation_data(
+        bsn=aggregated_data['person']['deceased_bsn'],
+        postcode=cak_address.get('postal_code', ''),
+        huisnummer=cak_address.get('house_number', ''),
+    )
+    aggregated_data['sources']['belastingdienst'] = build_belastingdienst_source(brieven_result)
+
     local_discrepancies = build_discrepancies(aggregated_data)
     analysis = analyze_with_greenpt(aggregated_data, local_discrepancies)
-    return aggregated_data, analysis, tool_plan, tool_results
+    return aggregated_data, analysis, tool_plan, tool_results, mismatch_result
 
 
 def _normalize_iban(value):
@@ -125,7 +135,7 @@ def _apply_mock_api_corrections(corrections, aggregated_data):
 @require_http_methods(['GET', 'POST'])
 def data_reconciliation(request):
     try:
-        aggregated_data, analysis, tool_plan, tool_results = _build_reconciliation_payload()
+        aggregated_data, analysis, tool_plan, tool_results, mismatch_result = _build_reconciliation_payload()
     except MockApiError as exc:
         return JsonResponse({
             'errors': {
@@ -135,6 +145,13 @@ def data_reconciliation(request):
             },
             'detail': str(exc),
         }, status=503)
+    except A2AClientError as exc:
+        return JsonResponse({
+            'errors': {
+                'a2a': 'De Belastingdienst A2A agent is niet bereikbaar. Start de A2A server op poort 9999.',
+            },
+            'detail': str(exc),
+        }, status=502)
 
     discrepancies = analysis['discrepancies']
 
@@ -147,6 +164,7 @@ def data_reconciliation(request):
             'greenpt': analysis['greenpt'],
             'tool_plan': tool_plan,
             'tool_results': tool_results,
+            'a2a_address_check': mismatch_result,
         })
 
     try:
