@@ -2,6 +2,7 @@ import type { AppVersion } from '../hooks/useAppVersion';
 import type { BegeleidingsVoorkeur } from '../../next/types/begeleiding';
 import { InstellingenMenu } from './InstellingenMenu';
 import { GovernmentLogo } from './GovernmentLogo';
+import { HelpMenu } from './HelpMenu';
 import { UserMenu } from './UserMenu';
 import { VersionToggle } from './VersionToggle';
 
@@ -26,7 +27,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   return (
     <header className="shrink-0 bg-white">
-      <div className="relative flex min-h-[4.5rem] items-center justify-between px-8 py-3">
+      <div className="relative flex min-h-[4.5rem] items-center justify-between px-4 py-3 sm:px-8">
         <div className="relative z-10 flex min-w-[9.5rem] items-center">
           {showVersionToggle && (
             <VersionToggle version={version} onVersionChange={onVersionChange} />
@@ -37,7 +38,8 @@ export function AppHeader({
           <GovernmentLogo />
         </div>
 
-        <div className="relative z-10 flex min-w-[12rem] items-center justify-end gap-4">
+        <div className="relative z-10 flex min-w-[12rem] items-center justify-end gap-3">
+          <HelpMenu />
           {begeleidingVoorkeur && onBegeleidingChange && (
             <InstellingenMenu
               voorkeur={begeleidingVoorkeur}

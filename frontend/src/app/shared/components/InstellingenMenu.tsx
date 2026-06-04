@@ -30,7 +30,6 @@ export function InstellingenMenu({ voorkeur, onChange, onResetOnboarding }: Inst
     emailNotifications: false,
     inAppNotifications: false,
   });
-  const [helpRequested, setHelpRequested] = useState(false);
 
   const toggleSetting = (key: keyof typeof settings) => {
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -195,26 +194,6 @@ export function InstellingenMenu({ voorkeur, onChange, onResetOnboarding }: Inst
                     drie maanden na het overlijden van uw naaste niet verplicht met uw situatie aan de
                     slag.
                   </p>
-                </div>
-
-                <div>
-                  <h3 className="mb-2 font-semibold text-gray-900">Heeft u hulp nodig?</h3>
-                  <p className="mb-3">
-                    Klik op de knop hieronder voor ondersteuning en persoonlijk contact.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setHelpRequested(true)}
-                    className="rounded-md bg-[#007AC8] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
-                  >
-                    Ik heb hulp nodig
-                  </button>
-                  {helpRequested && (
-                    <div className="mt-3 rounded-md border border-[#007AC8]/30 bg-[#E8F4FC] px-4 py-3 text-sm text-gray-800">
-                      Uw hulpverzoek is geregistreerd. Een medewerker neemt binnen 2 werkdagen contact
-                      met u op.
-                    </div>
-                  )}
                 </div>
 
                 <div>
