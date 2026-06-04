@@ -12,7 +12,7 @@ describe('partitionOverzicht', () => {
 
   it('maximaal mode shows fewer user actions than zelf mode', () => {
     const maxBoard = partitionOverzicht(overzicht, DEFAULT_BEGELEIDING);
-    const zelfBoard = partitionOverzicht(overzicht, { niveau: 'zelf', zelfRegelenOrganisaties: [] });
+    const zelfBoard = partitionOverzicht(overzicht, { assistance: 'none', zelfRegelenOrganisaties: [] });
     expect(maxBoard.actie_van_u.length).toBeLessThan(zelfBoard.actie_van_u.length);
   });
 
@@ -22,16 +22,16 @@ describe('partitionOverzicht', () => {
   });
 
   it('hides agent activity in zelf mode', () => {
-    const board = partitionOverzicht(overzicht, { niveau: 'zelf', zelfRegelenOrganisaties: [] });
+    const board = partitionOverzicht(overzicht, { assistance: 'none', zelfRegelenOrganisaties: [] });
     expect(board.op_achtergrond).toHaveLength(0);
   });
 
   it('keuze mode behaves like zelf mode', () => {
     const keuzeBoard = partitionOverzicht(overzicht, {
-      niveau: 'keuze',
+      assistance: 'partial',
       zelfRegelenOrganisaties: ['CAK'],
     });
-    const zelfBoard = partitionOverzicht(overzicht, { niveau: 'zelf', zelfRegelenOrganisaties: [] });
+    const zelfBoard = partitionOverzicht(overzicht, { assistance: 'none', zelfRegelenOrganisaties: [] });
     expect(keuzeBoard.actie_van_u.length).toBe(zelfBoard.actie_van_u.length);
     expect(keuzeBoard.op_achtergrond).toHaveLength(0);
   });
@@ -41,7 +41,7 @@ describe('shouldShowInActieVanU', () => {
   it('returns true for all taken in zelf mode', () => {
     const overzicht = deriveOverzicht(fixture as TruusCeesFixture, DEMO_TODAY);
     const all = overzicht.taken.every((t) =>
-      shouldShowInActieVanU(t, { niveau: 'zelf', zelfRegelenOrganisaties: [] }),
+      shouldShowInActieVanU(t, { assistance: 'none', zelfRegelenOrganisaties: [] }),
     );
     expect(all).toBe(true);
   });

@@ -2,13 +2,13 @@ import type { BegeleidingsVoorkeur } from '../types/begeleiding';
 import type { OverzichtResponse, StatusBoard, Taak } from '../types/overzicht';
 
 function isDelegatedToAgent(organisatie: string, prefs: BegeleidingsVoorkeur): boolean {
-  if (prefs.niveau === 'maximaal') return true;
-  if (prefs.niveau === 'zelf' || prefs.niveau === 'keuze') return false;
+  if (prefs.assistance === 'max') return true;
+  if (prefs.assistance === 'none' || prefs.assistance === 'partial') return false;
   return !prefs.zelfRegelenOrganisaties.includes(organisatie);
 }
 
 export function shouldShowInActieVanU(taak: Taak, prefs: BegeleidingsVoorkeur): boolean {
-  if (prefs.niveau === 'zelf' || prefs.niveau === 'keuze') return true;
+  if (prefs.assistance === 'none' || prefs.assistance === 'partial') return true;
   if (!isDelegatedToAgent(taak.organisatie, prefs)) return true;
   return taak.handeling_door_nabestaande;
 }
@@ -19,7 +19,7 @@ export function partitionOverzicht(
 ): StatusBoard {
   const actie_van_u = overzicht.taken.filter((t) => shouldShowInActieVanU(t, prefs));
 
-  const showAgentActivity = prefs.niveau === 'maximaal';
+  const showAgentActivity = prefs.assistance === 'max';
   const op_achtergrond = showAgentActivity
     ? overzicht.agentstappen.filter((s) => s.status === 'bezig')
     : [];

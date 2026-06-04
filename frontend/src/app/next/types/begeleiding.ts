@@ -1,7 +1,7 @@
-export type Begeleidingsniveau = 'maximaal' | 'zelf' | 'keuze';
+export type AssistanceLevel = 'max' | 'none' | 'partial';
 
 export interface BegeleidingsVoorkeur {
-  niveau: Begeleidingsniveau;
+  assistance: AssistanceLevel;
   zelfRegelenOrganisaties: string[];
 }
 
@@ -30,7 +30,7 @@ export const DELEGATIE_ORGANISATIES = [
 ] as const;
 
 export const DEFAULT_BEGELEIDING: BegeleidingsVoorkeur = {
-  niveau: 'maximaal',
+  assistance: 'max',
   zelfRegelenOrganisaties: [],
 };
 
@@ -118,13 +118,39 @@ export const DEFAULT_MELDINGEN: MeldingenVoorkeur = {
   inAppNotifications: false,
 };
 
-export const BEGELEIDING_LABELS: Record<Begeleidingsniveau, string> = {
-  maximaal: 'Maximaal',
-  zelf: 'Zelf regelen',
-  keuze: 'Per taak',
+export function normalizeBegeleidingsVoorkeur(raw: unknown): BegeleidingsVoorkeur {
+  if (!raw || typeof raw !== 'object') return DEFAULT_BEGELEIDING;
+  const value = raw as Record<string, unknown>;
+  const legacy = typeof value.niveau === 'string' ? value.niveau : null;
+  const assistance =
+    typeof value.assistance === 'string'
+      ? value.assistance
+      : legacy === 'maximaal'
+        ? 'max'
+        : legacy === 'zelf'
+          ? 'none'
+          : legacy === 'keuze'
+            ? 'partial'
+            : DEFAULT_BEGELEIDING.assistance;
+  return {
+    assistance:
+      assistance === 'max' || assistance === 'none' || assistance === 'partial'
+        ? assistance
+        : DEFAULT_BEGELEIDING.assistance,
+    zelfRegelenOrganisaties: Array.isArray(value.zelfRegelenOrganisaties)
+      ? value.zelfRegelenOrganisaties.filter((item): item is string => typeof item === 'string')
+      : [],
+  };
+}
+
+export const BEGELEIDING_LABELS: Record<AssistanceLevel, string> = {
+  max: 'Maximaal',
+  none: 'Zelf regelen',
+  partial: 'Per taak',
 };
 
 export const ONBOARDING_STORAGE_KEY = 'inwoner-centraal:onboarding-complete';
 export const BEGELEIDING_STORAGE_KEY = 'inwoner-centraal:begeleidings-voorkeur';
 export const GEGEVENS_STORAGE_KEY = 'inwoner-centraal:gegevens-profiel';
 export const MELDINGEN_STORAGE_KEY = 'inwoner-centraal:meldingen-voorkeur';
+export const OVERZICHT_STORAGE_KEY = 'inwoner-centraal:overzicht';

@@ -224,6 +224,8 @@ function sortRows(rows: StappenplanRowModel[], sort: string): StappenplanRowMode
     return copy.sort((a, b) => {
       const lockedDiff = Number(a.locked) - Number(b.locked);
       if (lockedDiff !== 0) return lockedDiff;
+      if (a.urgent && !b.urgent) return -1;
+      if (!a.urgent && b.urgent) return 1;
       if (a.deadline && b.deadline) return a.deadline.localeCompare(b.deadline);
       if (a.deadline) return -1;
       if (b.deadline) return 1;

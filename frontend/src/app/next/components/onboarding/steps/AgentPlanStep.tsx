@@ -1,82 +1,105 @@
-import { User } from 'lucide-react';
-import { countAgentSteps, getPlannedAgentSteps } from '../../../lib/getPlannedAgentSteps';
+import { CheckCircle2, CircleDashed } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { startIntakeDiscovery } from '../../../api/intakeDiscovery';
 import type { BegeleidingsVoorkeur } from '../../../types/begeleiding';
+import type { OverzichtResponse } from '../../../types/overzicht';
 
 interface AgentPlanStepProps {
   voorkeur: BegeleidingsVoorkeur;
+  initialResult: OverzichtResponse | null;
+  onDiscoveryComplete: (result: OverzichtResponse) => void;
   onNext: () => void;
   onBack: () => void;
 }
 
-export function AgentPlanStep({ voorkeur, onNext, onBack }: AgentPlanStepProps) {
-  const steps = getPlannedAgentSteps(voorkeur);
-  const counts = countAgentSteps(steps);
-  const agentSteps = steps.filter((s) => s.voorWie === 'agent');
-  const userSteps = steps.filter((s) => s.voorWie === 'u');
+interface LogLine {
+  id: string;
+  text: string;
+  status: 'pending' | 'done';
+}
+
+export function AgentPlanStep({
+  voorkeur,
+  initialResult,
+  onDiscoveryComplete,
+  onNext,
+  onBack,
+}: AgentPlanStepProps) {
+  const [lines, setLines] = useState<LogLine[]>(() =>
+    initialResult
+      ? [{ id: 'complete', text: 'Discovery is al afgerond voor deze sessie.', status: 'done' }]
+      : [{ id: 'start', text: 'Discovery wordt gestart...', status: 'pending' }],
+  );
+  const [resultReady, setResultReady] = useState(Boolean(initialResult));
+  const [error, setError] = useState<string | null>(null);
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (startedRef.current || initialResult) return;
+    startedRef.current = true;
+
+    const stream = startIntakeDiscovery(undefined, voorkeur.assistance, {
+      onProgress: (event) => {
+        setLines((current) => updateLogLines(current, event.line));
+      },
+      onResult: (result) => {
+        setLines((current) => markCurrentDone(current));
+        setResultReady(true);
+        onDiscoveryComplete(result);
+      },
+      onError: (message) => {
+        setError(message);
+        setLines((current) => markCurrentDone(current));
+      },
+    });
+
+    return () => stream.close();
+  }, [initialResult, onDiscoveryComplete, voorkeur.assistance]);
 
   return (
     <>
       <div className="flex-1">
-        <h1 className="mb-2 text-2xl font-bold text-gray-900">Dit gaan wij voor u doen</h1>
+        <h1 className="mb-2 text-2xl font-bold text-gray-900">We verzamelen uw situatie</h1>
         <p className="mb-6 text-sm text-gray-600">
-          Op basis van uw keuze ziet u hier wat onze agents op de achtergrond regelen en waar wij
-          uw hulp nodig hebben.
+          Tijdens deze stap halen we algemene gegevens op en bepalen we welke processen voor u
+          relevant zijn.
         </p>
 
-        <div className="mb-6 flex gap-3">
-          <div className="flex-1 rounded-lg bg-blue-50 px-4 py-3 text-center">
-            <p className="text-2xl font-bold text-[#007AC8]">{counts.agent}</p>
-            <p className="text-xs text-gray-600">Door ons geregeld</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+              Discovery log
+            </h2>
+            <span className="text-xs text-gray-500">
+              {resultReady ? 'Afgerond' : 'Bezig'}
+            </span>
           </div>
-          <div className="flex-1 rounded-lg bg-gray-100 px-4 py-3 text-center">
-            <p className="text-2xl font-bold text-gray-800">{counts.u}</p>
-            <p className="text-xs text-gray-600">Via u</p>
+
+          <div className="space-y-3">
+            {lines.map((line, index) => {
+              const isCurrentPending = line.status === 'pending' && index === lines.length - 1 && !resultReady;
+              return (
+                <div
+                  key={line.id}
+                  className="flex items-start gap-3 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-800"
+                >
+                  {isCurrentPending ? (
+                    <CircleDashed className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-[#007AC8]" />
+                  ) : (
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                  )}
+                  <span>{line.text}</span>
+                </div>
+              );
+            })}
           </div>
+
+          {error && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+              {error}
+            </div>
+          )}
         </div>
-
-        {agentSteps.length > 0 && (
-          <div className="mb-6">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#007AC8]">
-              Op de achtergrond
-            </h2>
-            <ul className="space-y-2">
-              {agentSteps.map((s) => (
-                <li
-                  key={s.id}
-                  className="rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm text-gray-800"
-                >
-                  <span className="font-semibold">{s.organisatie}</span> — {s.omschrijving}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {userSteps.length > 0 && (
-          <div>
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-700">
-              <User className="h-4 w-4" aria-hidden />
-              Waar wij u nodig hebben
-            </h2>
-            <ul className="space-y-2">
-              {userSteps.map((s) => (
-                <li
-                  key={s.id}
-                  className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800"
-                >
-                  <span className="font-semibold">{s.organisatie}</span> — {s.omschrijving}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {(voorkeur.niveau === 'zelf' || voorkeur.niveau === 'keuze') && (
-          <p className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-950">
-            U koos om zelf te regelen. Wij tonen vooral informatie; agents voeren geen acties uit
-            tenzij u dat later alsnog vraagt.
-          </p>
-        )}
       </div>
 
       <div className="mt-8 flex gap-3">
@@ -90,11 +113,26 @@ export function AgentPlanStep({ voorkeur, onNext, onBack }: AgentPlanStepProps) 
         <button
           type="button"
           onClick={onNext}
-          className="flex-1 rounded-md bg-[#007AC8] py-3 text-sm font-semibold text-white hover:bg-[#0069AD]"
+          disabled={!resultReady}
+          className={`flex-1 rounded-md py-3 text-sm font-semibold text-white ${
+            resultReady ? 'bg-[#007AC8] hover:bg-[#0069AD]' : 'cursor-not-allowed bg-gray-300'
+          }`}
         >
           Verder
         </button>
       </div>
     </>
+  );
+}
+
+function updateLogLines(current: LogLine[], text: string): LogLine[] {
+  const next = markCurrentDone(current);
+  return [...next, { id: `${Date.now()}-${next.length}`, text, status: 'pending' }];
+}
+
+function markCurrentDone(current: LogLine[]) {
+  if (current.length === 0) return current;
+  return current.map((line, index) =>
+    index === current.length - 1 ? { ...line, status: 'done' as const } : line,
   );
 }

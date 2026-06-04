@@ -12,6 +12,7 @@ export interface StappenplanRow {
   locked?: boolean;
   completed?: boolean;
   deadline?: string;
+  urgent?: boolean;
   taakId?: string;
 }
 
@@ -25,6 +26,7 @@ function taakRow(taak: Taak): StappenplanRow {
     description: taak.samenvatting,
     organisatie: taak.organisatie,
     deadline: taak.deadline,
+    urgent: taak.urgent,
     taakId: taak.id,
   };
 }
@@ -97,6 +99,8 @@ export function mapOverzichtToStappenplanTabs(
 
 export function pickUrgentRowIds(rows: StappenplanRow[]): string[] {
   const sorted = [...rows].sort((a, b) => {
+    if (a.urgent && !b.urgent) return -1;
+    if (!a.urgent && b.urgent) return 1;
     if (a.deadline && b.deadline) return a.deadline.localeCompare(b.deadline);
     if (a.deadline) return -1;
     if (b.deadline) return 1;

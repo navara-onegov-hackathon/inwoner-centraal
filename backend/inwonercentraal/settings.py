@@ -138,6 +138,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MOCK_CAK_BASE_URL = os.getenv('MOCK_CAK_BASE_URL', 'http://127.0.0.1:8001')
 MOCK_RDW_BASE_URL = os.getenv('MOCK_RDW_BASE_URL', 'http://127.0.0.1:8002')
+MOCK_SVB_BASE_URL = os.getenv('MOCK_SVB_BASE_URL', 'http://127.0.0.1:8003')
 MOCK_API_TIMEOUT_SECONDS = float(os.getenv('MOCK_API_TIMEOUT_SECONDS', '2'))
 GREENPT_TIMEOUT_SECONDS = float(os.getenv('GREENPT_TIMEOUT_SECONDS', '10'))
 

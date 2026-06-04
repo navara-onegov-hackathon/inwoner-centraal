@@ -1,4 +1,6 @@
 export type Detailniveau = 'begeleide' | 'uitgebreide';
+export type ProcessState = 'open' | 'blocked' | 'done' | 'pending';
+export type HandledBy = 'you' | 'us';
 
 export type TaakStatus = 'actie_nodig' | 'wacht_op_u' | 'in_behandeling';
 export type TaakActieType = 'betalen' | 'tekenen' | 'indienen' | 'bevestigen' | null;
@@ -52,8 +54,11 @@ export interface Taak {
   organisatie: string;
   status: TaakStatus;
   deadline?: string;
+  urgent?: boolean;
   bedrag?: Bedrag;
   handeling_door_nabestaande: boolean;
+  handled_by?: HandledBy;
+  state?: ProcessState;
   actie_type: TaakActieType;
   toon_cta_in_lijst: boolean;
   cta_label?: string;
@@ -105,6 +110,22 @@ export interface RawRecht {
 }
 
 export interface OverzichtResponse {
+  general_information?: {
+    deceased?: Record<string, unknown>;
+    partner?: Record<string, unknown>;
+    relationship?: Record<string, unknown>;
+  };
+  processes?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    organisation: string;
+    state: ProcessState;
+    handled_by: HandledBy;
+    deadline?: string;
+    urgent?: boolean;
+    evidence?: Record<string, unknown>;
+  }>;
   persona: PersonaContext;
   samenvatting: SamenvattingCounts;
   regelingen: Regeling[];

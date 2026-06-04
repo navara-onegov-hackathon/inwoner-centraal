@@ -7,6 +7,8 @@ import {
   GEGEVENS_STORAGE_KEY,
   MELDINGEN_STORAGE_KEY,
   ONBOARDING_STORAGE_KEY,
+  OVERZICHT_STORAGE_KEY,
+  normalizeBegeleidingsVoorkeur,
   normalizeGegevensProfiel,
   type BegeleidingsVoorkeur,
   type GegevensProfiel,
@@ -27,6 +29,7 @@ export function useOnboarding() {
 
   const reset = useCallback(() => {
     window.localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+    window.localStorage.removeItem(OVERZICHT_STORAGE_KEY);
     setCompleted(false);
   }, []);
 
@@ -53,7 +56,7 @@ export function useBegeleidingsVoorkeur() {
     if (typeof window === 'undefined') return DEFAULT_BEGELEIDING;
     try {
       const stored = window.localStorage.getItem(BEGELEIDING_STORAGE_KEY);
-      if (stored) return JSON.parse(stored) as BegeleidingsVoorkeur;
+      if (stored) return normalizeBegeleidingsVoorkeur(JSON.parse(stored));
     } catch {
       /* use default */
     }

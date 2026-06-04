@@ -2,7 +2,7 @@ import json
 import re
 from json import JSONDecodeError
 
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -10,6 +10,7 @@ from .a2a_client import A2AClientError, build_belastingdienst_source, get_reconc
 from .analysis import build_discrepancies
 from .demo_state import get_confirmed_corrections, remember_confirmed_address
 from .greenpt import analyze_with_greenpt
+from .intake_discovery import stream_intake_discovery
 from .mock_sources import MockApiError, build_government_data_from_tool_results
 from .tool_router import build_case_context, execute_tool_plan, plan_read_tools, plan_write_tools
 
@@ -198,3 +199,28 @@ def data_reconciliation(request):
         'tool_plan': write_plan,
         'tool_results': write_results,
     })
+
+
+@csrf_exempt
+@require_http_methods(['GET'])
+def intake_discovery_stream(request):
+    deceased_bsn = request.GET.get('bsn') or build_case_context()['deceased_bsn']
+    assistance = request.GET.get('assistance') or 'max'
+
+    def event_stream():
+        try:
+            yield "event: progress\ndata: {\"line\": \"Discovery gestart\"}\n\n"
+            for event_type, payload in stream_intake_discovery(
+                deceased_bsn=deceased_bsn,
+                assistance=assistance,
+            ):
+                payload_json = json.dumps(payload or {}, ensure_ascii=False)
+                yield f"event: {event_type}\ndata: {payload_json}\n\n"
+        except Exception as exc:
+            payload_json = json.dumps({'message': str(exc)}, ensure_ascii=False)
+            yield f"event: error\ndata: {payload_json}\n\n"
+
+    response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchOverzicht } from '../api/fetchOverzicht';
+import { OVERZICHT_STORAGE_KEY } from '../types/begeleiding';
 import type { OverzichtResponse } from '../types/overzicht';
 
 export function useOverzicht() {
@@ -8,6 +9,16 @@ export function useOverzicht() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(OVERZICHT_STORAGE_KEY);
+      if (stored) {
+        setData(JSON.parse(stored) as OverzichtResponse);
+        setLoading(false);
+        return;
+      }
+    } catch {
+      /* fall through to fetch */
+    }
     fetchOverzicht()
       .then(setData)
       .catch(() => setError('Overzicht kon niet worden geladen.'))

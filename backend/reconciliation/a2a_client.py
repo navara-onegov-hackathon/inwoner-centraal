@@ -43,6 +43,16 @@ async def _send_query(agent_card, bsn: str, query: str) -> dict:
         await client.close()
 
 
+def call_a2a_agent(query: str, bsn: str) -> dict:
+    """Call the configured A2A agent with a plain-text query for a deceased BSN."""
+    try:
+        agent_card = asyncio.run(_get_agent_card())
+        return asyncio.run(_send_query(agent_card, bsn, query))
+    except Exception as exc:
+        logger.exception('A2A agent call failed: %s', exc)
+        raise A2AClientError(f'A2A agent call failed: {exc}') from exc
+
+
 async def _fetch_both(bsn: str, postcode: str, huisnummer: str) -> tuple[dict, dict]:
     agent_card = await _get_agent_card()
     brieven_task = _send_query(agent_card, bsn, 'Geef alle brieven voor dit BSN')

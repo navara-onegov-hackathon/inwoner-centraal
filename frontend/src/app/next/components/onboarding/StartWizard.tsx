@@ -3,6 +3,7 @@ import { useState } from 'react';
 import {
   DEFAULT_BEGELEIDING,
   DEFAULT_GEGEVENS,
+  OVERZICHT_STORAGE_KEY,
   type BegeleidingsVoorkeur,
   type GegevensProfiel,
   type MeldingenVoorkeur,
@@ -14,7 +15,7 @@ import { DelegatieAfgerondStep } from './steps/DelegatieAfgerondStep';
 import { DelegatieStep, type DelegatieGegevens } from './steps/DelegatieStep';
 import { MeldingenStep } from './steps/MeldingenStep';
 import { VerifyGegevensStep } from './steps/VerifyGegevensStep';
-import type { PersonaContext } from '../../types/overzicht';
+import type { OverzichtResponse, PersonaContext } from '../../types/overzicht';
 
 interface StartWizardProps {
   persona: PersonaContext;
@@ -49,6 +50,7 @@ export function StartWizard({
   const [meldingen, setMeldingen] = useState<MeldingenVoorkeur>(initialMeldingen);
   const [gegevens, setGegevens] = useState<GegevensProfiel>(DEFAULT_GEGEVENS);
   const [delegatedTo, setDelegatedTo] = useState<DelegatieGegevens | null>(null);
+  const [discoveryResult, setDiscoveryResult] = useState<OverzichtResponse | null>(null);
 
   const step = STEPS[stepIndex];
 
@@ -64,6 +66,12 @@ export function StartWizard({
 
   const next = () => setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
   const back = () => setStepIndex((i) => Math.max(i - 1, 0));
+
+  const handleDiscoveryComplete = (result: OverzichtResponse) => {
+    setDiscoveryResult(result);
+    window.localStorage.setItem(OVERZICHT_STORAGE_KEY, JSON.stringify(result));
+    setGegevens((current) => prefillGegevensFromResult(current, result));
+  };
 
   if (delegatedTo) {
     return (
@@ -122,7 +130,13 @@ export function StartWizard({
               />
             )}
             {step === 'agentPlan' && (
-              <AgentPlanStep voorkeur={voorkeur} onNext={next} onBack={back} />
+              <AgentPlanStep
+                voorkeur={voorkeur}
+                initialResult={discoveryResult}
+                onDiscoveryComplete={handleDiscoveryComplete}
+                onNext={next}
+                onBack={back}
+              />
             )}
             {step === 'verifyGegevens' && (
               <VerifyGegevensStep
@@ -140,3 +154,26 @@ export function StartWizard({
 }
 
 export { DEFAULT_BEGELEIDING };
+
+function prefillGegevensFromResult(
+  current: GegevensProfiel,
+  result: OverzichtResponse,
+): GegevensProfiel {
+  const partner = (result.general_information?.partner ?? {}) as Record<string, unknown>;
+  const address = (partner.address ?? {}) as Record<string, unknown>;
+  return {
+    ...current,
+    volledigeNaam:
+      typeof partner.name === 'string' && partner.name.length > 0
+        ? partner.name
+        : current.volledigeNaam,
+    adres: {
+      straat: typeof address.straat === 'string' ? address.straat : current.adres.straat,
+      huisnummer:
+        typeof address.huisnummer === 'string' ? address.huisnummer : current.adres.huisnummer,
+      postcode: typeof address.postcode === 'string' ? address.postcode : current.adres.postcode,
+      woonplaats:
+        typeof address.woonplaats === 'string' ? address.woonplaats : current.adres.woonplaats,
+    },
+  };
+}

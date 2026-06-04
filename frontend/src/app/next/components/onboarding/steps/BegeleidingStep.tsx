@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react';
-import type { BegeleidingsVoorkeur, Begeleidingsniveau } from '../../../types/begeleiding';
+import type { AssistanceLevel, BegeleidingsVoorkeur } from '../../../types/begeleiding';
 
 interface BegeleidingStepProps {
   voorkeur: BegeleidingsVoorkeur;
@@ -9,14 +9,14 @@ interface BegeleidingStepProps {
 }
 
 const OPTIONS: {
-  niveau: Begeleidingsniveau;
+  assistance: AssistanceLevel;
   title: string;
   summary: string;
   bullets: string[];
   hint: string;
 }[] = [
   {
-    niveau: 'maximaal',
+    assistance: 'max',
     title: 'Regel zoveel mogelijk voor mij',
     summary: 'Wij bereiden voor, schakelen met organisaties en houden u kort op de hoogte.',
     bullets: [
@@ -27,7 +27,7 @@ const OPTIONS: {
     hint: 'Geschikt als u overzicht wilt zonder zelf te zoeken.',
   },
   {
-    niveau: 'zelf',
+    assistance: 'none',
     title: 'Ik regel het liever zelf',
     summary: 'U ziet alles en voert stappen zelf uit. Wij tonen vooral informatie.',
     bullets: [
@@ -38,7 +38,7 @@ const OPTIONS: {
     hint: 'Geschikt als u elk detail zelf wilt beoordelen.',
   },
   {
-    niveau: 'keuze',
+    assistance: 'partial',
     title: 'Ik kies per taak',
     summary: 'Bepaal per taak of u het zelf regelt of hulp wilt.',
     bullets: [
@@ -51,8 +51,8 @@ const OPTIONS: {
 ];
 
 export function BegeleidingStep({ voorkeur, onChange, onNext, onBack }: BegeleidingStepProps) {
-  const select = (niveau: Begeleidingsniveau) => {
-    onChange({ niveau, zelfRegelenOrganisaties: [] });
+  const select = (assistance: AssistanceLevel) => {
+    onChange({ assistance, zelfRegelenOrganisaties: [] });
   };
 
   return (
@@ -65,12 +65,12 @@ export function BegeleidingStep({ voorkeur, onChange, onNext, onBack }: Begeleid
 
         <div className="space-y-3">
           {OPTIONS.map((opt) => {
-            const selected = voorkeur.niveau === opt.niveau;
+            const selected = voorkeur.assistance === opt.assistance;
             return (
               <button
-                key={opt.niveau}
+                key={opt.assistance}
                 type="button"
-                onClick={() => select(opt.niveau)}
+                onClick={() => select(opt.assistance)}
                 className={`w-full rounded-lg border p-4 text-left transition ${
                   selected
                     ? 'border-[#007AC8] bg-[#E8F4FC] ring-1 ring-[#007AC8]'

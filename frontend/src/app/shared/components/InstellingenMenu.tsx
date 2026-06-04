@@ -9,8 +9,8 @@ import {
 } from '../../legacy/components/ui/sheet';
 import {
   BEGELEIDING_LABELS,
+  type AssistanceLevel,
   type BegeleidingsVoorkeur,
-  type Begeleidingsniveau,
   type MeldingenVoorkeur,
 } from '../../next/types/begeleiding';
 import { MeldingenPreferencesPanel } from './MeldingenPreferencesPanel';
@@ -33,10 +33,10 @@ export function InstellingenMenu({
   const [open, setOpen] = useState(false);
   const [helpRequested, setHelpRequested] = useState(false);
 
-  const setNiveau = (niveau: Begeleidingsniveau) => {
+  const setNiveau = (assistance: AssistanceLevel) => {
     onChange({
-      niveau,
-      zelfRegelenOrganisaties: niveau === 'keuze' ? voorkeur.zelfRegelenOrganisaties : [],
+      assistance,
+      zelfRegelenOrganisaties: assistance === 'partial' ? voorkeur.zelfRegelenOrganisaties : [],
     });
   };
 
@@ -67,13 +67,13 @@ export function InstellingenMenu({
                 Wijzig hoeveel wij voor u mogen regelen. Uw overzicht past zich direct aan.
               </p>
               <div className="space-y-3">
-                {(['maximaal', 'zelf', 'keuze'] as Begeleidingsniveau[]).map((n) => (
+                {(['max', 'none', 'partial'] as AssistanceLevel[]).map((n) => (
                   <button
                     key={n}
                     type="button"
                     onClick={() => setNiveau(n)}
                     className={`w-full rounded-lg border p-3 text-left text-sm ${
-                      voorkeur.niveau === n
+                      voorkeur.assistance === n
                         ? 'border-[#007AC8] bg-[#E8F4FC]'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
@@ -124,14 +124,6 @@ export function InstellingenMenu({
                       met u op.
                     </div>
                   )}
-                </div>
-
-                <div>
-                  <h3 className="mb-2 font-semibold text-gray-900">Gebruik maken van de ID-wallet?</h3>
-                  <p>
-                    De ID-wallet kan u helpen met het regelen van zaken. Lees hier meer over uw
-                    ID-wallet en welke documenten u daarmee kunt delen.
-                  </p>
                 </div>
 
                 {onResetOnboarding && (
