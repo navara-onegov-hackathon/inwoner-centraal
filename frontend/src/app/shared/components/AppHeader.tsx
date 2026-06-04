@@ -1,6 +1,7 @@
 import type { BegeleidingsVoorkeur, MeldingenVoorkeur } from '../../next/types/begeleiding';
-import { InstellingenMenu } from './InstellingenMenu';
 import { GovernmentLogo } from './GovernmentLogo';
+import { HelpMenu } from './HelpMenu';
+import { InstellingenMenu } from './InstellingenMenu';
 import { UserMenu } from './UserMenu';
 
 interface AppHeaderProps {
@@ -26,6 +27,7 @@ export function AppHeader({
         <div className="min-w-[8rem]" aria-hidden />
 
         <div className="relative z-10 flex min-w-[12rem] items-center justify-end gap-3">
+          <HelpMenu />
           {begeleidingVoorkeur && onBegeleidingChange && meldingenVoorkeur && onMeldingenChange && (
             <InstellingenMenu
               voorkeur={begeleidingVoorkeur}

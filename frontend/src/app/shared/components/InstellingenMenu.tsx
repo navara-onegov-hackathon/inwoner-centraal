@@ -34,7 +34,10 @@ export function InstellingenMenu({
   const [helpRequested, setHelpRequested] = useState(false);
 
   const setNiveau = (niveau: Begeleidingsniveau) => {
-    onChange({ niveau, zelfRegelenOrganisaties: [] });
+    onChange({
+      niveau,
+      zelfRegelenOrganisaties: niveau === 'keuze' ? voorkeur.zelfRegelenOrganisaties : [],
+    });
   };
 
   return (
@@ -78,14 +81,10 @@ export function InstellingenMenu({
                     <span className="font-semibold">{BEGELEIDING_LABELS[n]}</span>
                   </button>
                 ))}
-
               </div>
             </section>
 
-            <MeldingenPreferencesPanel
-              voorkeur={meldingen}
-              onChange={onMeldingenChange}
-            />
+            <MeldingenPreferencesPanel voorkeur={meldingen} onChange={onMeldingenChange} />
 
             <section className="border-t border-gray-100 pt-6">
               <h2 className="mb-3 text-base font-bold text-gray-900">Overig</h2>
