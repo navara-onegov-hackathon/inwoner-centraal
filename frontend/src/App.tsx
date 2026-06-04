@@ -1,11 +1,38 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
 
+type BackendHealth = {
+  status: string
+  message: string
+}
+
 function App() {
   const [count, setCount] = useState(0)
+  const [backendHealth, setBackendHealth] = useState<BackendHealth | null>(null)
+  const [backendError, setBackendError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function checkBackend() {
+      try {
+        const response = await fetch('/api/health/')
+
+        if (!response.ok) {
+          throw new Error(`Backend returned ${response.status}`)
+        }
+
+        setBackendHealth(await response.json())
+        setBackendError(null)
+      } catch (error) {
+        setBackendHealth(null)
+        setBackendError(error instanceof Error ? error.message : 'Backend unavailable')
+      }
+    }
+
+    checkBackend()
+  }, [])
 
   return (
     <>
@@ -28,6 +55,10 @@ function App() {
         >
           Count is {count}
         </button>
+        <div className={backendHealth ? 'backend-status is-online' : 'backend-status'}>
+          <strong>Backend connection</strong>
+          <span>{backendHealth ? backendHealth.message : backendError ?? 'Checking backend...'}</span>
+        </div>
       </section>
 
       <div className="ticks"></div>
