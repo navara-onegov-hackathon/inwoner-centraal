@@ -1,23 +1,25 @@
-import { useState } from 'react';
-import { GovernmentToggle } from '../../../legacy/components/GovernmentToggle';
+import { useMemo, useState } from 'react';
+import {
+  situatieCategorieen,
+  situatieVeranderingen,
+  type SituatieCategorieId,
+} from '../../data/situatieVeranderingen';
+import { SituatieVeranderingCard } from '../wat-betekent/SituatieVeranderingCard';
 
 interface WatBetekentPageProps {
   onNavigate?: (section: string) => void;
 }
 
 export function WatBetekentPage({ onNavigate }: WatBetekentPageProps) {
-  const [settings, setSettings] = useState({
-    governmentSupport: true,
-    suggestions: true,
-    emailSteps: true,
-    emailNotifications: false,
-    inAppNotifications: false,
-  });
-  const [helpRequested, setHelpRequested] = useState(false);
+  const [activeCategorie, setActiveCategorie] = useState<SituatieCategorieId>('alle');
 
-  const toggleSetting = (key: keyof typeof settings) => {
-    setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  const gefilterd = useMemo(
+    () =>
+      activeCategorie === 'alle'
+        ? situatieVeranderingen
+        : situatieVeranderingen.filter((item) => item.categorie === activeCategorie),
+    [activeCategorie],
+  );
 
   return (
     <div className="mx-auto max-w-5xl px-8 py-8">
@@ -33,135 +35,78 @@ export function WatBetekentPage({ onNavigate }: WatBetekentPageProps) {
         <span className="font-semibold text-gray-900">Wat betekent dit voor u?</span>
       </nav>
 
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-[2rem] font-bold leading-tight text-gray-900">
-            Wat betekent dit voor u?
-          </h1>
-          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-gray-600">
-            Informatie over uw situatie als nabestaande, uw rechten en de ondersteuning die u kunt
-            krijgen.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setHelpRequested(true)}
-          className="shrink-0 rounded-md bg-[#007AC8] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
-        >
-          Ik heb hulp nodig
-        </button>
+      <div className="mb-8">
+        <h1 className="text-[2rem] font-bold leading-tight text-gray-900">
+          Wat betekent dit voor u?
+        </h1>
+        <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-gray-600">
+          Na het overlijden van uw partner veranderen er dingen in uw inkomen, verzekeringen, belasting
+          en andere regelingen. Hier ziet u per onderwerp hoe uw situatie was — en wat er vanaf nu
+          anders is of kan worden.
+        </p>
       </div>
 
-      {helpRequested && (
-        <div className="mb-6 rounded-md border border-[#007AC8]/30 bg-[#E8F4FC] px-4 py-3 text-sm text-gray-800">
-          Uw hulpverzoek is geregistreerd. Een medewerker neemt binnen 2 werkdagen contact met u op.
+      <div className="mb-6 rounded-lg border border-[#007AC8]/15 bg-[#E8F4FC]/40 px-5 py-4">
+        <p className="text-sm leading-relaxed text-gray-700">
+          <span className="font-semibold text-gray-900">Voorbeeld voor Truus de Vries-Bakker.</span>{' '}
+          Dit is een statisch overzicht ter illustratie. In een latere versie koppelen we dit aan uw
+          eigen gegevens.
+        </p>
+      </div>
+
+      <div
+        className="mb-6 flex flex-wrap gap-2"
+        role="tablist"
+        aria-label="Filter op onderwerp"
+      >
+        {situatieCategorieen.map((categorie) => {
+          const active = activeCategorie === categorie.id;
+          return (
+            <button
+              key={categorie.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setActiveCategorie(categorie.id)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                active
+                  ? 'bg-[#007AC8] text-white'
+                  : 'bg-white text-gray-700 ring-1 ring-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              {categorie.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <p className="mb-4 text-sm text-gray-500">
+        {gefilterd.length} {gefilterd.length === 1 ? 'onderwerp' : 'onderwerpen'}
+      </p>
+
+      <div className="space-y-4">
+        {gefilterd.map((item) => (
+          <SituatieVeranderingCard key={item.id} item={item} />
+        ))}
+      </div>
+
+      {gefilterd.length === 0 && (
+        <div className="rounded-lg border border-gray-200 bg-white px-6 py-12 text-center text-sm text-gray-600">
+          Geen onderwerpen in deze categorie.
         </div>
       )}
 
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="space-y-6 text-[15px] leading-relaxed text-gray-800">
-          <section>
-            <h2 className="mb-2 text-base font-bold text-gray-900">Gecondoleerd</h2>
-            <p>
-              De gemeente heeft aangegeven dat u nabestaande bent. Gecondoleerd met uw verlies.
-            </p>
-          </section>
-
-          <section className="border-t border-gray-100 pt-6">
-            <h2 className="mb-2 text-base font-bold text-gray-900">Uitstel van verplichtingen</h2>
-            <p>
-              Dit kan een moeilijke tijd zijn voor u en uw dierbaren. Daarom kunt u in de eerste drie
-              maanden na het overlijden van uw naaste niet verplicht met uw situatie aan de slag.
-            </p>
-          </section>
-
-          <section className="border-t border-gray-100 pt-6">
-            <h2 className="mb-2 text-base font-bold text-gray-900">Heeft u hulp nodig?</h2>
-            <p>
-              Klik op de knop &quot;Ik heb hulp nodig&quot; bovenaan de pagina voor ondersteuning en
-              persoonlijk contact.
-            </p>
-          </section>
-
-          <section className="border-t border-gray-100 pt-6">
-            <h2 className="mb-3 text-base font-bold text-gray-900">Ondersteuning vanuit de overheid</h2>
-            <p className="mb-4">
-              Om u te helpen hebben organisaties van de overheid gegevens voor uw stappenplan
-              klaarstaan. Geef toestemming om gegevens te delen zodat wij u gerichter kunnen
-              ondersteunen.
-            </p>
-
-            <div className="mb-4 flex flex-wrap items-center gap-3">
-              <GovernmentToggle
-                checked={settings.governmentSupport}
-                onChange={() => toggleSetting('governmentSupport')}
-              />
-              <span>een overzicht te sturen van zaken die nog geregeld moeten worden</span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <GovernmentToggle
-                checked={settings.suggestions}
-                onChange={() => toggleSetting('suggestions')}
-              />
-              <span>suggesties te doen welke instanties op de hoogte gebracht kunnen worden</span>
-            </div>
-          </section>
-
-          <section className="border-t border-gray-100 pt-6">
-            <h2 className="mb-3 text-base font-bold text-gray-900">Meldingen ontvangen</h2>
-            <p className="mb-4">
-              U kiest zelf welke meldingen u ontvangt. Zet een schakelaar op AAN om meldingen te
-              ontvangen, of op UIT om ze uit te zetten.
-            </p>
-
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <GovernmentToggle
-                  checked={settings.emailSteps}
-                  onChange={() => toggleSetting('emailSteps')}
-                />
-                <span>E-mails bij belangrijke stappen of herinneringen</span>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <GovernmentToggle
-                  checked={settings.emailNotifications}
-                  onChange={() => toggleSetting('emailNotifications')}
-                />
-                <span>E-mailnotificaties over uw situatie</span>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <GovernmentToggle
-                  checked={settings.inAppNotifications}
-                  onChange={() => toggleSetting('inAppNotifications')}
-                />
-                <span>Notificaties in MijnOverheid</span>
-              </div>
-            </div>
-          </section>
-
-          <section className="border-t border-gray-100 pt-6">
-            <h2 className="mb-2 text-base font-bold text-gray-900">Gebruik maken van de ID-wallet?</h2>
-            <p>
-              De ID-wallet kan u helpen met het regelen van zaken. Lees hier meer over uw ID-wallet
-              en welke documenten u daarmee kunt delen.
-            </p>
-          </section>
-        </div>
-      </div>
-
       <div className="mt-8 rounded-lg border border-[#007AC8]/20 bg-[#E8F4FC]/60 px-5 py-4">
         <p className="text-sm text-gray-800">
-          Klaar om te beginnen?{' '}
+          Moet u ergens actie op ondernemen?{' '}
           <button
             type="button"
             onClick={() => onNavigate?.('stappenplan')}
-            className="font-semibold text-[#007AC8] underline hover:no-underline"
+            className="font-semibold text-[#007AC8] underline-offset-2 hover:underline"
           >
             Bekijk uw stappenplan
           </button>
+          {' '}voor concrete taken en deadlines.
         </p>
       </div>
     </div>

@@ -36,7 +36,7 @@ export function Dashboard({ welcomeName, onNavigate }: DashboardProps) {
   return (
     <div className="mx-auto max-w-5xl px-8 py-8">
       <h1 className="mb-8 text-[2rem] font-bold leading-tight text-gray-900">
-        Wat kan ik waar vinden?
+        Wat kan ik waar vinden, {welcomeName}?
       </h1>
 
       <section>
