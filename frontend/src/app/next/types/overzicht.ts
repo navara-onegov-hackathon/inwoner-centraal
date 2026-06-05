@@ -67,6 +67,9 @@ export interface Taak {
   bron_verplichting_ids: string[];
   form?: AGUIForm | null;
   resolution_options?: ResolutionOption[];
+  /** User chose to handle this task themselves; show confirm-when-done control. */
+  awaiting_self_completion?: boolean;
+  self_completion_data?: Record<string, unknown>;
 }
 
 export interface AGUIFieldOption {

@@ -1,5 +1,6 @@
 import type { BegeleidingsVoorkeur } from '../types/begeleiding';
-import type { OverzichtResponse, StatusBoard, Taak } from '../types/overzicht';
+import type { Agentstap, OverzichtResponse, StatusBoard, Taak } from '../types/overzicht';
+import { isAgentDelegatedTask, isUserInitiatedAgentStep } from './agentDelegation';
 
 function isDelegatedToAgent(organisatie: string, prefs: BegeleidingsVoorkeur): boolean {
   if (prefs.assistance === 'max') return true;
@@ -8,9 +9,16 @@ function isDelegatedToAgent(organisatie: string, prefs: BegeleidingsVoorkeur): b
 }
 
 export function shouldShowInActieVanU(taak: Taak, prefs: BegeleidingsVoorkeur): boolean {
+  if (isAgentDelegatedTask(taak)) return false;
   if (prefs.assistance === 'none' || prefs.assistance === 'partial') return true;
   if (!isDelegatedToAgent(taak.organisatie, prefs)) return true;
   return taak.handeling_door_nabestaande;
+}
+
+function filterAgentSteps(steps: Agentstap[], prefs: BegeleidingsVoorkeur, status: Agentstap['status']) {
+  const matching = steps.filter((step) => step.status === status);
+  if (prefs.assistance === 'max') return matching;
+  return matching.filter(isUserInitiatedAgentStep);
 }
 
 export function partitionOverzicht(
@@ -21,14 +29,8 @@ export function partitionOverzicht(
   const doneTasks = overzicht.taken.filter((t) => t.state === 'done');
   const actie_van_u = openTasks.filter((t) => shouldShowInActieVanU(t, prefs));
 
-  const showAgentActivity = prefs.assistance === 'max';
-  const op_achtergrond = showAgentActivity
-    ? overzicht.agentstappen.filter((s) => s.status === 'bezig')
-    : [];
-
-  const geregeldAgentstappen = showAgentActivity
-    ? overzicht.agentstappen.filter((s) => s.status === 'voltooid')
-    : [];
+  const op_achtergrond = filterAgentSteps(overzicht.agentstappen, prefs, 'bezig');
+  const geregeldAgentstappen = filterAgentSteps(overzicht.agentstappen, prefs, 'voltooid');
   const geregeldRegelingen = overzicht.regelingen.filter((r) => r.status === 'in_behandeling');
 
   const wachten_op_organisatie = overzicht.verwacht_binnenkort;

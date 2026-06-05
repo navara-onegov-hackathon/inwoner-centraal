@@ -34,6 +34,27 @@ export function completeTask(
   return next;
 }
 
+export function markTaskAwaitingSelfCompletion(
+  overzicht: OverzichtResponse,
+  taskId: string,
+  selfCompletionData: CaseData = {},
+): OverzichtResponse {
+  const next = {
+    ...overzicht,
+    taken: overzicht.taken.map((taak) =>
+      taak.id === taskId
+        ? {
+            ...taak,
+            awaiting_self_completion: true,
+            self_completion_data: selfCompletionData,
+          }
+        : taak,
+    ),
+  };
+  persistOverzicht(next);
+  return next;
+}
+
 function toDoneTask(taak: Taak): Taak {
   return {
     ...taak,
@@ -44,5 +65,7 @@ function toDoneTask(taak: Taak): Taak {
     cta_label: undefined,
     form: null,
     resolution_options: [],
+    awaiting_self_completion: undefined,
+    self_completion_data: undefined,
   };
 }

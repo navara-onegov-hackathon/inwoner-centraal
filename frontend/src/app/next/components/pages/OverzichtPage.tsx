@@ -8,9 +8,10 @@ import { StappenplanOverzichtPanel } from '../stappenplan/StappenplanOverzichtPa
 
 interface OverzichtPageProps {
   voorkeur: BegeleidingsVoorkeur;
+  onNavigate?: (section: string) => void;
 }
 
-export function OverzichtPage({ voorkeur }: OverzichtPageProps) {
+export function OverzichtPage({ voorkeur, onNavigate }: OverzichtPageProps) {
   const { data, error, loading, setData } = useOverzicht();
   const { isUitgebreid } = useDetailniveau();
 
@@ -40,11 +41,15 @@ export function OverzichtPage({ voorkeur }: OverzichtPageProps) {
   return (
     <div className="mx-auto max-w-5xl px-8 py-8">
       <nav className="mb-6 text-sm text-gray-600" aria-label="Breadcrumb">
-        <span className="text-gray-600">Home</span>
+        <button
+          type="button"
+          onClick={() => onNavigate?.('home')}
+          className="hover:text-[#007AC8] hover:underline"
+        >
+          Overzicht
+        </button>
         <span className="mx-2">&gt;</span>
-        <span className="text-gray-800">Mijn situatie</span>
-        <span className="mx-2">&gt;</span>
-        <span className="font-semibold text-gray-900">Nabestaande</span>
+        <span className="font-semibold text-gray-900">Stappenplan</span>
       </nav>
 
       <div className="mb-8 flex items-center justify-between">
@@ -62,6 +67,7 @@ export function OverzichtPage({ voorkeur }: OverzichtPageProps) {
       <StappenplanOverzichtPanel
         partitioned={partitioned}
         isUitgebreid={isUitgebreid}
+        voorkeur={voorkeur}
         onOverzichtChange={setData}
       />
     </div>
