@@ -31,7 +31,7 @@ AI is used in the background for discovery, tool selection, source interpretatio
 
 ## Demo Video
 
-<video src="docs/demo-video.mov" width="320" height="240" controls></video>
+<video src="docs/demo-video.mp4" width="320" height="240" controls></video>
 
 ## Demo Flow
 
