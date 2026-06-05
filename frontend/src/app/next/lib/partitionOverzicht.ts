@@ -4,13 +4,13 @@ import { isAgentDelegatedTask, isUserInitiatedAgentStep } from './agentDelegatio
 
 function isDelegatedToAgent(organisatie: string, prefs: BegeleidingsVoorkeur): boolean {
   if (prefs.assistance === 'max') return true;
-  if (prefs.assistance === 'none' || prefs.assistance === 'partial') return false;
+  if (prefs.assistance === 'none') return false;
   return !prefs.zelfRegelenOrganisaties.includes(organisatie);
 }
 
 export function shouldShowInActieVanU(taak: Taak, prefs: BegeleidingsVoorkeur): boolean {
   if (isAgentDelegatedTask(taak)) return false;
-  if (prefs.assistance === 'none' || prefs.assistance === 'partial') return true;
+  if (prefs.assistance === 'none') return true;
   if (!isDelegatedToAgent(taak.organisatie, prefs)) return true;
   return taak.handeling_door_nabestaande;
 }

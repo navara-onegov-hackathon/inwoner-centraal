@@ -5,7 +5,7 @@ import { persistOverzicht } from './overzichtState';
 export const DELEGATED_AGENT_STEP_SUFFIX = '-delegated';
 
 export function allowsOnDemandAgent(voorkeur: BegeleidingsVoorkeur): boolean {
-  return voorkeur.assistance === 'none' || voorkeur.assistance === 'partial';
+  return voorkeur.assistance === 'none';
 }
 
 export function isAgentDelegatedTask(taak: Taak): boolean {

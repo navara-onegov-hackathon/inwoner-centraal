@@ -1,4 +1,4 @@
-export type AssistanceLevel = 'max' | 'none' | 'partial';
+export type AssistanceLevel = 'max' | 'none';
 
 export interface BegeleidingsVoorkeur {
   assistance: AssistanceLevel;
@@ -122,21 +122,18 @@ export function normalizeBegeleidingsVoorkeur(raw: unknown): BegeleidingsVoorkeu
   if (!raw || typeof raw !== 'object') return DEFAULT_BEGELEIDING;
   const value = raw as Record<string, unknown>;
   const legacy = typeof value.niveau === 'string' ? value.niveau : null;
-  const assistance =
+  const rawAssistance =
     typeof value.assistance === 'string'
       ? value.assistance
       : legacy === 'maximaal'
         ? 'max'
-        : legacy === 'zelf'
+        : legacy === 'zelf' || legacy === 'keuze'
           ? 'none'
-          : legacy === 'keuze'
-            ? 'partial'
-            : DEFAULT_BEGELEIDING.assistance;
+          : DEFAULT_BEGELEIDING.assistance;
+  const assistance = rawAssistance === 'partial' ? 'none' : rawAssistance;
   return {
     assistance:
-      assistance === 'max' || assistance === 'none' || assistance === 'partial'
-        ? assistance
-        : DEFAULT_BEGELEIDING.assistance,
+      assistance === 'max' || assistance === 'none' ? assistance : DEFAULT_BEGELEIDING.assistance,
     zelfRegelenOrganisaties: Array.isArray(value.zelfRegelenOrganisaties)
       ? value.zelfRegelenOrganisaties.filter((item): item is string => typeof item === 'string')
       : [],
@@ -146,7 +143,6 @@ export function normalizeBegeleidingsVoorkeur(raw: unknown): BegeleidingsVoorkeu
 export const BEGELEIDING_LABELS: Record<AssistanceLevel, string> = {
   max: 'Maximaal',
   none: 'Zelf regelen',
-  partial: 'Per taak',
 };
 
 export const ONBOARDING_STORAGE_KEY = 'inwoner-centraal:onboarding-complete';
