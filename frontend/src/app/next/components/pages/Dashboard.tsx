@@ -1,7 +1,6 @@
 import { ChevronRight, FileText, HeartHandshake, ListChecks, Mail } from 'lucide-react';
 
 interface DashboardProps {
-  welcomeName: string;
   onNavigate?: (section: string) => void;
 }
 
@@ -32,11 +31,11 @@ const quickLinks = [
   },
 ];
 
-export function Dashboard({ welcomeName, onNavigate }: DashboardProps) {
+export function Dashboard({ onNavigate }: DashboardProps) {
   return (
     <div className="mx-auto max-w-5xl px-8 py-8">
       <h1 className="mb-8 text-[2rem] font-bold leading-tight text-gray-900">
-        Wat kan ik waar vinden, {welcomeName}?
+        Wat kan ik waar vinden?
       </h1>
 
       <section>

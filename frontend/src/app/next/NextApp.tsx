@@ -8,7 +8,7 @@ import { BrievenPage } from './components/pages/BrievenPage';
 import { Dashboard } from './components/pages/Dashboard';
 import { OverzichtPage } from './components/pages/OverzichtPage';
 import { WatBetekentPage } from './components/pages/WatBetekentPage';
-import { useBegeleidingsVoorkeur, useGegevensProfiel, useMeldingenVoorkeur, useOnboarding } from './hooks/useBegeleiding';
+import { useBegeleidingsVoorkeur, useMeldingenVoorkeur, useOnboarding } from './hooks/useBegeleiding';
 import { mockOverzicht } from './api/mockOverzicht';
 import { ONBOARDING_STORAGE_KEY } from './types/begeleiding';
 
@@ -24,13 +24,9 @@ export function NextApp() {
   });
   const { completed, complete, reset } = useOnboarding();
   const onboardingDone = SKIP_START_WORKFLOW || completed;
-  const { gegevens } = useGegevensProfiel();
   const { voorkeur, setVoorkeur } = useBegeleidingsVoorkeur();
   const { meldingen, setMeldingen } = useMeldingenVoorkeur();
   const persona = useMemo(() => mockOverzicht().persona, []);
-
-  const welcomeName =
-    gegevens.volledigeNaam.split(' ')[0] || persona.nabestaande.split(' ')[0];
 
   const handleComplete = (profile: Parameters<typeof complete>[0]) => {
     complete(profile);
@@ -59,7 +55,7 @@ export function NextApp() {
 
     switch (activeSection) {
       case 'home':
-        return <Dashboard welcomeName={welcomeName} onNavigate={setActiveSection} />;
+        return <Dashboard onNavigate={setActiveSection} />;
       case 'berichtenbox':
         return <BerichtenboxPage onNavigate={setActiveSection} />;
       case 'brieven':
@@ -69,7 +65,7 @@ export function NextApp() {
       case 'uitleg':
         return <WatBetekentPage onNavigate={setActiveSection} />;
       default:
-        return <Dashboard welcomeName={welcomeName} onNavigate={setActiveSection} />;
+        return <Dashboard onNavigate={setActiveSection} />;
     }
   };
 
