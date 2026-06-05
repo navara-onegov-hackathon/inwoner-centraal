@@ -59,9 +59,9 @@ export function AgentPlanStep({
   return (
     <>
       <div className="flex-1">
-        <h1 className="mb-2 text-2xl font-bold text-gray-900">We verzamelen uw situatie</h1>
+        <h1 className="mb-2 text-2xl font-bold text-gray-900">We maken een overzicht van uw situatie</h1>
         <p className="mb-6 text-sm text-gray-600">
-          Tijdens deze stap halen we algemene gegevens op en bepalen we welke processen voor u
+          Tijdens deze stap halen wij algemene gegevens op. We kijken welke processen voor u
           relevant zijn.
         </p>
 

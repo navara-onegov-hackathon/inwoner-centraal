@@ -175,7 +175,7 @@ export function DelegatieStep({
                     <div>
                       <p className="text-sm font-bold text-gray-900">De andere persoon neemt het over</p>
                       <p className="mt-0.5 text-xs text-gray-600">
-                        Machtig iemand via DigiD Machtigen om het traject voort te zetten.
+                        Machtig iemand via DigiD om het traject voort te zetten.
                       </p>
                     </div>
                   </div>
@@ -184,7 +184,7 @@ export function DelegatieStep({
                 {otherMode === 'delegate' && (
                   <div className="space-y-3 pt-1">
                     <p className="text-sm text-gray-700">
-                      Vraag een machtigingscode aan voor de persoon die het overneemt. Geef nooit uw
+                      Wie gaat u helpen? Geef nooit uw
                       DigiD-inloggegevens direct aan een ander.
                     </p>
                     <div>

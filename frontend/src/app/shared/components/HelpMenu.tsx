@@ -11,7 +11,7 @@ export function HelpMenu() {
       aria-label={`Bel voor hulp: ${HELP_PHONE_LABEL}`}
     >
       <Phone className="h-4 w-4 text-[#007AC8]" aria-hidden />
-      <span>Hulp nodig?</span>
+      <span>Kunnen wij u helpen?</span>
       <span className="hidden whitespace-nowrap sm:inline">{HELP_PHONE_LABEL}</span>
     </a>
   );

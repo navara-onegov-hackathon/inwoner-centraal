@@ -20,20 +20,19 @@ const OPTIONS: {
     title: 'Regel zoveel mogelijk voor mij',
     summary: 'Wij bereiden voor, schakelen met organisaties en houden u kort op de hoogte.',
     bullets: [
-      'Minste aantal handelingen voor u',
       'U betaalt, tekent of bevestigt alleen waar dat moet',
-      'Korte updates over wat wij doen',
+      'U ontvangt korte updates over wat wij doen',
     ],
-    hint: 'Geschikt als u overzicht wilt zonder zelf te zoeken.',
+    hint: 'Geschikt als u overzicht wilt zonder zelf te handelen.',
   },
   {
     assistance: 'none',
     title: 'Ik regel het liever zelf',
     summary: 'U ziet alles en voert stappen zelf uit. Wij tonen vooral informatie.',
     bullets: [
-      'Alle taken en brieven zichtbaar',
-      'Geen automatische acties op de achtergrond',
-      'Meer controle, meer lezen',
+      'Alle taken en brieven zijn zichtbaar',
+      'Wij doen niks op de achtergrond',
+      'U heeft altijd volledige controle',
     ],
     hint: 'Geschikt als u elk detail zelf wilt beoordelen.',
   },
@@ -42,11 +41,11 @@ const OPTIONS: {
     title: 'Ik kies per taak',
     summary: 'Bepaal per taak of u het zelf regelt of hulp wilt.',
     bullets: [
-      'Per taak kiezen wat bij u past',
-      'Geen automatische acties op de achtergrond',
-      'Meer controle, taak voor taak',
+      'Wij doen niks vanzelf op de achtergrond',
+      'U heeft volledige controle',
+      'U kunt per taak controle uit handen geven',
     ],
-    hint: 'Geschikt als u sommige stappen zelf wilt, andere niet.',
+    hint: 'Geschikt als u sommige stappen zelf wilt doen, en andere niet.',
   },
 ];
 
