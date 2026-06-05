@@ -16,9 +16,24 @@ from .intake_tools import (
 from .intake_validation import build_overview_from_agent_output
 
 
-_FIXTURE_PATH = (
-    Path(__file__).resolve().parents[2] / 'frontend' / 'src' / 'fixtures' / 'truus-cees.json'
-)
+def _resolve_fixture_path() -> Path:
+    candidates = [
+        os.getenv('INTAKE_FIXTURE_PATH'),
+        settings.BASE_DIR / 'fixtures' / 'truus-cees.json',
+        settings.BASE_DIR.parent / 'frontend' / 'src' / 'fixtures' / 'truus-cees.json',
+    ]
+    for candidate in candidates:
+        if not candidate:
+            continue
+        path = Path(candidate)
+        if path.is_file():
+            return path
+    raise FileNotFoundError(
+        'Truus/Cees fixture not found. Expected backend/fixtures/truus-cees.json '
+        'or frontend/src/fixtures/truus-cees.json.',
+    )
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -274,7 +289,7 @@ def _safe_event_arguments(arguments: dict[str, Any]) -> dict[str, Any]:
 
 
 def _known_case_information() -> dict[str, Any]:
-    fixture = json.loads(_FIXTURE_PATH.read_text(encoding='utf-8'))
+    fixture = json.loads(_resolve_fixture_path().read_text(encoding='utf-8'))
     case = fixture.get('overledene') or {}
     return {
         'deceased': case.get('overledene') or {},
