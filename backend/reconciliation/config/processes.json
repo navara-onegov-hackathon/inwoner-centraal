@@ -2,7 +2,7 @@
   {
     "id": "generic-address-check",
     "organisation": "Generic",
-    "title": "Check whether the correspondence address matches the organisation-known address",
+    "title": "Correspondentieadres controleren",
     "category": "generic",
     "requires_resolution_options_when_relevant": true,
     "notes": "This generic process may result in multiple concrete organisation-specific processes. If important mail may go to the wrong address and no concrete deadline exists, mark the process urgent. For assistance=max, the system may handle supported address changes. For assistance=none or partial, offer user choices to update the address or keep it as-is; keeping it as-is still completes the step."
@@ -193,7 +193,8 @@
     "organisation": "Diverse",
     "title": "Mogelijk recht op bijstand of inkomensondersteuning onderzoeken",
     "category": "fixed",
-    "notes": "Relevant when partner income or household changes suggest potential income support."
+    "notes": "Voor deze demo altijd relevant als onderzoek naar mogelijke inkomensondersteuning na het overlijden. Vraag de gebruiker later om ontbrekende inkomensgegevens als die nodig zijn; de intake-agent handelt dit niet af.",
+    "demo_always_relevant": true
   },
   {
     "id": "kvk-onderneming-uitschrijven-of-voortzetten",

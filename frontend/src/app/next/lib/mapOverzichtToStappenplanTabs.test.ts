@@ -13,23 +13,36 @@ describe('mapOverzichtToStappenplanTabs', () => {
   const overzicht = deriveOverzicht(fixture as TruusCeesFixture, DEMO_TODAY);
   const board = partitionOverzicht(overzicht, DEFAULT_BEGELEIDING);
 
-  it('splits open user tasks into urgent and nog-te-doen', () => {
+  it('splits open user tasks into urgent and in behandeling', () => {
     const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false, DEMO_TODAY);
-    expect(tabs.urgent.length + tabs['nog-te-doen'].length).toBe(board.actie_van_u.length);
+    expect(tabs.urgent.length + tabs['in-behandeling'].length).toBe(board.actie_van_u.length);
     expect(tabs.urgent.every((r) => r.urgent)).toBe(true);
-    expect(tabs['nog-te-doen'].every((r) => !r.urgent)).toBe(true);
+    expect(tabs['in-behandeling'].every((r) => !r.urgent)).toBe(true);
   });
 
-  it('combines agent + geregeld rows in wat-doen-wij', () => {
-    const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false, DEMO_TODAY);
+  it('combines delegated tasks and geregeld rows in wat-doen-wij', () => {
+    const delegatedTaak = {
+      ...overzicht.taken[0],
+      handled_by: 'us' as const,
+      state: 'pending' as const,
+      status: 'in_behandeling' as const,
+    };
+    const nextOverzicht = {
+      ...overzicht,
+      taken: overzicht.taken.map((taak) =>
+        taak.id === delegatedTaak.id ? delegatedTaak : taak,
+      ),
+    };
+    const nextBoard = partitionOverzicht(nextOverzicht, DEFAULT_BEGELEIDING);
+    const tabs = mapOverzichtToStappenplanTabs(nextBoard, nextOverzicht, false, DEMO_TODAY);
     expect(tabs['wat-doen-wij'].length).toBeGreaterThan(0);
-    expect(tabs['wat-doen-wij'].some((r) => r.locked)).toBe(true);
+    expect(tabs['wat-doen-wij'].some((r) => r.kind === 'taak')).toBe(true);
   });
 
   it('buildStappenplanProgress reflects completed vs open steps', () => {
     const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false, DEMO_TODAY);
     const progress = buildStappenplanProgress(tabs);
-    const openCount = tabs.urgent.length + tabs['nog-te-doen'].length;
+    const openCount = tabs.urgent.length + tabs['in-behandeling'].length;
 
     expect(progress.totalCount).toBe(openCount + tabs.gedaan.length);
     expect(progress.completedCount).toBe(tabs.gedaan.length);

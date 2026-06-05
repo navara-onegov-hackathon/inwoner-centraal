@@ -1,6 +1,6 @@
 import type { OverzichtResponse, StatusBoard, Taak } from '../types/overzicht';
 
-export type StappenplanTabId = 'urgent' | 'nog-te-doen' | 'gedaan' | 'wat-doen-wij';
+export type StappenplanTabId = 'urgent' | 'in-behandeling' | 'gedaan' | 'wat-doen-wij';
 export type StappenplanRowKind = 'taak' | 'agent' | 'regeling' | 'verwacht' | 'geen_actie';
 
 export const URGENT_DAYS = 14;
@@ -68,22 +68,22 @@ function taakRow(taak: Taak, referenceDate: string): StappenplanRow {
 function partitionOpenTasks(
   taken: Taak[],
   referenceDate: string,
-): { urgent: StappenplanRow[]; nogTeDoen: StappenplanRow[] } {
+): { urgent: StappenplanRow[]; inBehandeling: StappenplanRow[] } {
   const urgent: StappenplanRow[] = [];
-  const nogTeDoen: StappenplanRow[] = [];
+  const inBehandeling: StappenplanRow[] = [];
 
   for (const taak of taken) {
     const row = taakRow(taak, referenceDate);
     if (row.urgent) {
       urgent.push(row);
     } else {
-      nogTeDoen.push(row);
+      inBehandeling.push(row);
     }
   }
 
   return {
     urgent: sortByDueDateFirst(urgent),
-    nogTeDoen: sortByDueDateFirst(nogTeDoen),
+    inBehandeling: sortByDueDateFirst(inBehandeling),
   };
 }
 
@@ -93,17 +93,10 @@ export function mapOverzichtToStappenplanTabs(
   isUitgebreid: boolean,
   referenceDate: string,
 ): StappenplanTabRows {
-  const { urgent, nogTeDoen } = partitionOpenTasks(board.actie_van_u, referenceDate);
+  const { urgent, inBehandeling } = partitionOpenTasks(board.actie_van_u, referenceDate);
 
   const watDoenWij: StappenplanRow[] = [
-    ...board.op_achtergrond.map((s) => ({
-      id: s.id,
-      kind: 'agent' as const,
-      title: s.omschrijving,
-      description: `${s.organisatie} — bezig op de achtergrond`,
-      organisatie: s.organisatie,
-      locked: true,
-    })),
+    ...sortByDueDateFirst(board.geregeld_door_ons.taken.map((taak) => taakRow(taak, referenceDate))),
     ...board.geregeld_door_ons.regelingen.map((r) => ({
       id: r.id,
       kind: 'regeling' as const,
@@ -153,7 +146,7 @@ export function mapOverzichtToStappenplanTabs(
 
   return {
     urgent,
-    'nog-te-doen': nogTeDoen,
+    'in-behandeling': inBehandeling,
     'wat-doen-wij': watDoenWij,
     gedaan,
   };
@@ -173,7 +166,7 @@ export interface StappenplanProgress {
 }
 
 export function buildStappenplanProgress(tabs: StappenplanTabRows): StappenplanProgress {
-  const openByYou = tabs.urgent.length + tabs['nog-te-doen'].length;
+  const openByYou = tabs.urgent.length + tabs['in-behandeling'].length;
   const completedCount = tabs.gedaan.length;
   const totalCount = Math.max(openByYou + completedCount, 1);
   const percentage = Math.round((completedCount / totalCount) * 100);

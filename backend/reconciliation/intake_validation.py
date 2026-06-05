@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Any
 
 
@@ -10,7 +9,6 @@ def build_overview_from_agent_output(
 ) -> dict[str, Any]:
     validated_processes = [_validate_process(process) for process in processes]
     taken = [_process_to_taak(process, completed_task_ids) for process in validated_processes]
-    agentstappen = [_process_to_agentstap(process) for process in validated_processes if _is_us_background(process)]
 
     return {
         'general_information': _general_information(user_info),
@@ -24,7 +22,7 @@ def build_overview_from_agent_output(
             'afgerond': 0,
         },
         'regelingen': [],
-        'agentstappen': agentstappen,
+        'agentstappen': [],
         'taken': taken,
         'verwacht_binnenkort': [],
         'geen_actie_nodig': [],
@@ -45,6 +43,8 @@ def _validate_process(process: dict[str, Any]) -> dict[str, Any]:
         raise ValueError(f"Invalid handled_by for process {process['id']}: {process['handled_by']}")
     if process.get('deadline') and process.get('urgent'):
         raise ValueError(f"Process {process['id']} has both deadline and urgent.")
+    if process['state'] == 'blocked' and not process.get('blocked_reason'):
+        raise ValueError(f"Blocked process {process['id']} requires blocked_reason.")
     if process.get('form'):
         _validate_ag_ui_form(process['id'], process['form'])
     return dict(process)
@@ -82,23 +82,12 @@ def _process_to_taak(process: dict[str, Any], completed_task_ids: set[str]) -> d
         'actie_type': action_type,
         'toon_cta_in_lijst': state == 'open',
         'cta_label': process.get('cta_label') or _cta_label_for(action_type),
+        'blocked_reason': process.get('blocked_reason') or None,
+        'available_from': process.get('available_from') or None,
         'bron_brief_ids': _evidence_refs(process, 'brief'),
         'bron_verplichting_ids': _evidence_refs(process, 'obligation'),
         'form': None if state == 'done' else process.get('form'),
         'resolution_options': [] if state == 'done' else process.get('resolution_options') or [],
-    }
-
-
-def _process_to_agentstap(process: dict[str, Any]) -> dict[str, Any]:
-    return {
-        'id': f"agentstap-{process['id']}",
-        'organisatie': process['organisation'],
-        'omschrijving': process['title'],
-        'uitgevoerd_op': date.today().isoformat(),
-        'type': 'voorbereid_door_agent',
-        'status': 'voltooid' if process['state'] == 'done' else 'bezig',
-        'state': process['state'],
-        'handled_by': 'us',
     }
 
 
@@ -117,6 +106,10 @@ def _public_process(process: dict[str, Any]) -> dict[str, Any]:
         public['deadline'] = process['deadline']
     elif process.get('urgent'):
         public['urgent'] = True
+    if process.get('blocked_reason'):
+        public['blocked_reason'] = process['blocked_reason']
+    if process.get('available_from'):
+        public['available_from'] = process['available_from']
     return public
 
 
@@ -149,8 +142,6 @@ def _name(value: dict[str, Any]) -> str:
     )
 
 
-def _is_us_background(process: dict[str, Any]) -> bool:
-    return process.get('handled_by') == 'us' and process.get('state') in {'open', 'pending', 'done'}
 
 
 def _amount(value):

@@ -28,6 +28,7 @@ export function partitionOverzicht(
   const openTasks = overzicht.taken.filter((t) => t.state !== 'done');
   const doneTasks = overzicht.taken.filter((t) => t.state === 'done');
   const actie_van_u = openTasks.filter((t) => shouldShowInActieVanU(t, prefs));
+  const takenDoorOns = openTasks.filter(isAgentDelegatedTask);
 
   const op_achtergrond = filterAgentSteps(overzicht.agentstappen, prefs, 'bezig');
   const geregeldAgentstappen = filterAgentSteps(overzicht.agentstappen, prefs, 'voltooid');
@@ -46,6 +47,7 @@ export function partitionOverzicht(
     actie_van_u,
     op_achtergrond,
     geregeld_door_ons: {
+      taken: takenDoorOns,
       agentstappen: geregeldAgentstappen,
       regelingen: geregeldRegelingen,
     },
@@ -59,7 +61,9 @@ export function buildSamenvattingCounts(board: StatusBoard) {
     actie_van_u: board.actie_van_u.length,
     op_achtergrond: board.op_achtergrond.length,
     geregeld_door_ons:
-      board.geregeld_door_ons.agentstappen.length + board.geregeld_door_ons.regelingen.length,
+      board.geregeld_door_ons.taken.length +
+      board.geregeld_door_ons.agentstappen.length +
+      board.geregeld_door_ons.regelingen.length,
     wachten_op_organisatie: board.wachten_op_organisatie.length,
     afgerond:
       board.afgerond.taken.length + board.afgerond.regelingen.length + board.afgerond.geen_actie.length,

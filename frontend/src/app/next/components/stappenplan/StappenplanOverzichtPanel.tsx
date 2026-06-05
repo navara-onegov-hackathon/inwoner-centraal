@@ -20,7 +20,7 @@ interface StappenplanOverzichtPanelProps {
 
 const tabs: { id: StappenplanTabId; label: string }[] = [
   { id: 'urgent', label: 'Urgent' },
-  { id: 'nog-te-doen', label: 'Nog te doen' },
+  { id: 'in-behandeling', label: 'In behandeling' },
   { id: 'gedaan', label: 'Gedaan' },
   { id: 'wat-doen-wij', label: 'Wat wij doen' },
 ];
@@ -50,7 +50,7 @@ export function StappenplanOverzichtPanel({
   const progress = useMemo(() => buildStappenplanProgress(tabRows), [tabRows]);
 
   const userTasksComplete =
-    tabRows.urgent.length === 0 && tabRows['nog-te-doen'].length === 0;
+    tabRows.urgent.length === 0 && tabRows['in-behandeling'].length === 0;
 
   const toggleExpanded = (row: StappenplanRowModel) => {
     if (row.locked) return;
@@ -129,9 +129,9 @@ export function StappenplanOverzichtPanel({
           renderTabEmptyState({
             activeTab,
             userTasksComplete,
-            hasNogTeDoenTasks: tabRows['nog-te-doen'].length > 0,
-            onGoToNogTeDoen: () => {
-              setActiveTab('nog-te-doen');
+            hasInBehandelingTasks: tabRows['in-behandeling'].length > 0,
+            onGoToInBehandeling: () => {
+              setActiveTab('in-behandeling');
               setExpandedId(null);
             },
           })
@@ -157,24 +157,24 @@ export function StappenplanOverzichtPanel({
 function renderTabEmptyState({
   activeTab,
   userTasksComplete,
-  hasNogTeDoenTasks,
-  onGoToNogTeDoen,
+  hasInBehandelingTasks,
+  onGoToInBehandeling,
 }: {
   activeTab: StappenplanTabId;
   userTasksComplete: boolean;
-  hasNogTeDoenTasks: boolean;
-  onGoToNogTeDoen: () => void;
+  hasInBehandelingTasks: boolean;
+  onGoToInBehandeling: () => void;
 }) {
   if (activeTab === 'urgent') {
     if (userTasksComplete) {
       return <UserTasksCompleteMessage />;
     }
-    if (hasNogTeDoenTasks) {
-      return <NoUrgentTasksMessage onGoToNogTeDoen={onGoToNogTeDoen} />;
+    if (hasInBehandelingTasks) {
+      return <NoUrgentTasksMessage onGoToInBehandeling={onGoToInBehandeling} />;
     }
   }
 
-  if (activeTab === 'nog-te-doen' && userTasksComplete) {
+  if (activeTab === 'in-behandeling' && userTasksComplete) {
     return <UserTasksCompleteMessage />;
   }
 
@@ -200,7 +200,7 @@ function UserTasksCompleteMessage() {
   );
 }
 
-function NoUrgentTasksMessage({ onGoToNogTeDoen }: { onGoToNogTeDoen: () => void }) {
+function NoUrgentTasksMessage({ onGoToInBehandeling }: { onGoToInBehandeling: () => void }) {
   return (
     <div className="px-6 py-14 text-center">
       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
@@ -209,13 +209,13 @@ function NoUrgentTasksMessage({ onGoToNogTeDoen }: { onGoToNogTeDoen: () => void
       <h3 className="text-lg font-bold text-gray-900">U hoeft nu niets urgent te doen</h3>
       <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-gray-600">
         Er is op dit moment niets dat direct uw aandacht vraagt. U kunt rustig verder wanneer het
-        u uitkomt — overige open stappen vindt u onder{' '}
+        u uitkomt. Overige open stappen vindt u onder{' '}
         <button
           type="button"
-          onClick={onGoToNogTeDoen}
+          onClick={onGoToInBehandeling}
           className="font-semibold text-[#007AC8] underline-offset-2 hover:underline"
         >
-          Nog te doen
+          In behandeling
         </button>
         .
       </p>

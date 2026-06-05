@@ -63,6 +63,8 @@ export interface Taak {
   actie_type: TaakActieType;
   toon_cta_in_lijst: boolean;
   cta_label?: string;
+  blocked_reason?: string | null;
+  available_from?: string | null;
   bron_brief_ids: string[];
   bron_verplichting_ids: string[];
   form?: AGUIForm | null;
@@ -197,6 +199,7 @@ export interface StatusBoard {
   actie_van_u: Taak[];
   op_achtergrond: Agentstap[];
   geregeld_door_ons: {
+    taken: Taak[];
     agentstappen: Agentstap[];
     regelingen: Regeling[];
   };

@@ -16,9 +16,23 @@ describe('partitionOverzicht', () => {
     expect(maxBoard.actie_van_u.length).toBeLessThan(zelfBoard.actie_van_u.length);
   });
 
-  it('puts bezig agentstappen in op_achtergrond for maximaal', () => {
-    const board = partitionOverzicht(overzicht, DEFAULT_BEGELEIDING);
-    expect(board.op_achtergrond.some((s) => s.status === 'bezig')).toBe(true);
+  it('puts delegated tasks in geregeld_door_ons for maximaal', () => {
+    const delegatedTaak = {
+      ...overzicht.taken[0],
+      handled_by: 'us' as const,
+      state: 'pending' as const,
+      status: 'in_behandeling' as const,
+    };
+    const board = partitionOverzicht(
+      {
+        ...overzicht,
+        taken: overzicht.taken.map((taak) =>
+          taak.id === delegatedTaak.id ? delegatedTaak : taak,
+        ),
+      },
+      DEFAULT_BEGELEIDING,
+    );
+    expect(board.geregeld_door_ons.taken.length).toBeGreaterThan(0);
   });
 
   it('hides agent activity in zelf mode', () => {

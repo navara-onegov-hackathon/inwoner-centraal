@@ -45,22 +45,11 @@ describe('agentDelegation', () => {
       {
         ...overzicht,
         taken: overzicht.taken.map((item) => (item.id === taak.id ? delegatedTaak : item)),
-        agentstappen: [
-          ...overzicht.agentstappen,
-          {
-            id: `agentstap-${taak.id}-delegated`,
-            organisatie: taak.organisatie,
-            omschrijving: 'Test',
-            uitgevoerd_op: '2025-04-20',
-            type: 'voorbereid_door_agent' as const,
-            status: 'bezig' as const,
-          },
-        ],
       },
       ZELF,
     );
 
     expect(board.actie_van_u.some((item) => item.id === taak.id)).toBe(false);
-    expect(board.op_achtergrond).toHaveLength(1);
+    expect(board.geregeld_door_ons.taken.some((item) => item.id === taak.id)).toBe(true);
   });
 });

@@ -43,7 +43,11 @@ export function StappenplanRow({
   const taak = row.taakId ? overzicht.taken.find((t) => t.id === row.taakId) : undefined;
   const deadline = row.deadline ?? taak?.deadline;
 
-  const statusLabel = row.completed ? 'Gedaan' : 'Nog te doen';
+  const statusLabel = row.completed
+    ? 'Gedaan'
+    : taak?.state === 'blocked'
+      ? 'Nog niet beschikbaar'
+      : 'In behandeling';
 
   return (
     <div
@@ -67,7 +71,7 @@ export function StappenplanRow({
         <div className="flex shrink-0 items-start gap-2">
           <div className="flex flex-col items-end gap-1.5">
             <div className="flex items-center gap-2 text-sm">
-              <span className={row.completed ? 'text-green-700' : 'text-[#007AC8]'}>
+              <span className={row.completed ? 'text-green-700' : taak?.state === 'blocked' ? 'text-gray-600' : 'text-[#007AC8]'}>
                 {statusLabel}
               </span>
               {row.locked && (
@@ -132,6 +136,7 @@ function TaakExpandedDetail({
     taak.bron_verplichting_ids.includes(v.id),
   );
   const agentstappen = overzicht.agentstappen.filter((s) => s.organisatie === taak.organisatie);
+  const actionDisabled = taak.state === 'blocked' && taak.handled_by === 'you';
 
   const completeWithPatch = (patch: Record<string, unknown> = {}, successMessage?: string) => {
     const next = completeTask(overzicht, taak.id, patch);
@@ -224,6 +229,16 @@ function TaakExpandedDetail({
 
       <p className="text-sm leading-relaxed text-gray-700">{taak.samenvatting}</p>
 
+      {taak.state === 'blocked' && taak.blocked_reason && (
+        <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+          <p className="font-semibold text-gray-900">Nog niet beschikbaar</p>
+          <p className="mt-1">{taak.blocked_reason}</p>
+          {taak.available_from && (
+            <p className="mt-1 text-gray-600">Beschikbaar vanaf {formatDeadline(taak.available_from)}.</p>
+          )}
+        </div>
+      )}
+
       {agentstappen.length > 0 && (
         <div>
           <h3 className="mb-2 text-sm font-semibold text-gray-900">Wat wij al deden</h3>
@@ -267,28 +282,35 @@ function TaakExpandedDetail({
       )}
 
       {taak.toon_cta_in_lijst && taak.cta_label && !taak.awaiting_self_completion && (
-        <button
-          type="button"
-          onClick={() =>
-            runWithActionChoice(taak.cta_label!, {
-              directSelfComplete: () => {
-                const next = markTaskAwaitingSelfCompletion(overzicht, taak.id);
-                onOverzichtChange(next);
-                setMessage(
-                  'Regel dit op uw eigen manier. Laat het ons weten wanneer u klaar bent via de knop hieronder.',
-                );
-              },
-            })
-          }
-          className="rounded-md bg-[#007AC8] px-5 py-2 text-sm font-semibold text-white hover:opacity-90"
-        >
-          {taak.cta_label}
-        </button>
+        <div>
+          <button
+            type="button"
+            disabled={actionDisabled}
+            onClick={() =>
+              runWithActionChoice(taak.cta_label!, {
+                directSelfComplete: () => {
+                  const next = markTaskAwaitingSelfCompletion(overzicht, taak.id);
+                  onOverzichtChange(next);
+                  setMessage(
+                    'Regel dit op uw eigen manier. Laat het ons weten wanneer u klaar bent via de knop hieronder.',
+                  );
+                },
+              })
+            }
+            className="rounded-md bg-[#007AC8] px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600 disabled:opacity-80"
+          >
+            {taak.cta_label}
+          </button>
+          {actionDisabled && taak.blocked_reason && (
+            <p className="mt-2 text-xs text-gray-500">{taak.blocked_reason}</p>
+          )}
+        </div>
       )}
 
       {taak.resolution_options && taak.resolution_options.length > 0 && !taak.awaiting_self_completion && (
         <ResolutionOptions
           options={taak.resolution_options}
+          disabled={actionDisabled}
           onChoose={(option) => {
             const successMessage =
               option.action === 'update_to_known_address'
@@ -306,6 +328,7 @@ function TaakExpandedDetail({
       {taak.form && !taak.awaiting_self_completion && (
         <AGUIFormCard
           task={taak}
+          disabled={actionDisabled}
           onSubmit={(values) =>
             runWithActionChoice(taak.form!.submit_label, {
               selfCompletionData: values,
@@ -370,9 +393,11 @@ function TaakExpandedDetail({
 
 function ResolutionOptions({
   options,
+  disabled,
   onChoose,
 }: {
   options: ResolutionOption[];
+  disabled: boolean;
   onChoose: (option: ResolutionOption) => void;
 }) {
   return (
@@ -383,8 +408,9 @@ function ResolutionOptions({
           <button
             key={option.id}
             type="button"
+            disabled={disabled}
             onClick={() => onChoose(option)}
-            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-100"
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
           >
             {option.label}
           </button>
@@ -396,9 +422,11 @@ function ResolutionOptions({
 
 function AGUIFormCard({
   task,
+  disabled,
   onSubmit,
 }: {
   task: Taak;
+  disabled: boolean;
   onSubmit: (values: Record<string, unknown>) => void;
 }) {
   const storedCaseData = useMemo(() => readCaseData(), []);
@@ -442,6 +470,7 @@ function AGUIFormCard({
                 onChange={(e) => setValues((current) => ({ ...current, [field.name]: e.target.value }))}
                 className="rounded-md border border-gray-300 bg-white px-3 py-2"
                 required={field.required}
+                disabled={disabled}
               >
                 <option value="">Maak een keuze</option>
                 {field.options?.map((option) => (
@@ -457,6 +486,7 @@ function AGUIFormCard({
                 className="rounded-md border border-gray-300 bg-white px-3 py-2"
                 placeholder={field.placeholder}
                 required={field.required}
+                disabled={disabled}
               />
             )}
           </label>
@@ -465,7 +495,8 @@ function AGUIFormCard({
 
       <button
         type="submit"
-        className="inline-flex items-center gap-2 rounded-md bg-[#007AC8] px-5 py-2 text-sm font-semibold text-white hover:opacity-90"
+        disabled={disabled}
+        className="inline-flex items-center gap-2 rounded-md bg-[#007AC8] px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600"
       >
         <CheckCircle2 className="h-4 w-4" aria-hidden />
         {task.form.submit_label}

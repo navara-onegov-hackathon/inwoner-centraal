@@ -18,43 +18,43 @@ class IntakeAgentState:
 
 def build_openai_tools() -> list[dict[str, Any]]:
     return [
-        _tool('emit_progress', 'Emit a concrete user-facing progress line for the SSE log.', {
+        _tool('emit_progress', 'Geef een concrete voortgangsregel voor de gebruiker.', {
             'type': 'object',
             'properties': {
                 'message': {
                     'type': 'string',
                     'description': (
-                        'Concrete Dutch progress message for citizens. Use neutral wording like '
-                        '"Controle bij RDW: voertuiggegevens ophalen." Do not mention AI, agents, tools, '
-                        'OpenAPI, or first-person wording such as "Ik controleer bij ...".'
+                        'Concrete Nederlandse voortgangsregel voor burgers. Gebruik neutrale tekst zoals '
+                        '"Controle bij RDW: voertuiggegevens ophalen." Noem geen AI, agents, tools, '
+                        'OpenAPI of eerste persoon zoals "Ik controleer bij ...".'
                     ),
                 },
             },
             'required': ['message'],
             'additionalProperties': False,
         }),
-        _tool('discover_api', 'Return the complete OpenAPI JSON document for a configured API.', {
+        _tool('discover_api', 'Haal het volledige OpenAPI JSON-document op voor een geconfigureerde API.', {
             'type': 'object',
             'properties': {
                 'api': {
                     'type': 'string',
-                    'description': 'Configured API id, for example cak, rdw, or svb.',
+                    'description': 'Geconfigureerde API-id, bijvoorbeeld cak, rdw of svb.',
                 },
             },
             'required': ['api'],
             'additionalProperties': False,
         }),
-        _tool('call_api', 'Call a concrete REST endpoint selected by the agent from an OpenAPI document.', {
+        _tool('call_api', 'Roep een concreet REST-endpoint aan dat uit een OpenAPI-document is gekozen.', {
             'type': 'object',
             'properties': {
                 'method': {'type': 'string', 'enum': ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']},
                 'url': {
                     'type': 'string',
-                    'description': 'Absolute URL under a configured API base URL, or /<api-id>/<path> for a configured API.',
+                    'description': 'Absolute URL onder een geconfigureerde API-base-URL, of /<api-id>/<pad>.',
                 },
                 'body': {
                     'type': ['object', 'null'],
-                    'description': 'JSON request body when needed. Use null for endpoints without a body.',
+                    'description': 'JSON-body als die nodig is. Gebruik null voor endpoints zonder body.',
                 },
                 'headers': {
                     'type': ['object', 'null'],
@@ -64,16 +64,16 @@ def build_openai_tools() -> list[dict[str, Any]]:
             'required': ['method', 'url'],
             'additionalProperties': False,
         }),
-        _tool('call_a2a_agent', 'Call a configured agent-to-agent endpoint.', {
+        _tool('call_a2a_agent', 'Roep een geconfigureerde agent-naar-agent-koppeling aan.', {
             'type': 'object',
             'properties': {
                 'agent': {
                     'type': 'string',
-                    'description': 'Configured A2A agent id, for example belastingdienst_brieven.',
+                    'description': 'Geconfigureerde A2A-id, bijvoorbeeld belastingdienst_brieven.',
                 },
                 'input': {
                     'type': 'object',
-                    'description': 'Agent input. For belastingdienst_brieven use bsn and query.',
+                    'description': 'Invoer voor de koppeling. Gebruik voor belastingdienst_brieven bsn en query.',
                     'properties': {
                         'bsn': {'type': 'string'},
                         'query': {'type': 'string'},
@@ -85,14 +85,14 @@ def build_openai_tools() -> list[dict[str, Any]]:
             'required': ['agent', 'input'],
             'additionalProperties': False,
         }),
-        _tool('set_user_info', 'Register the basic user and case information for the intake UI.', _user_info_schema()),
-        _tool('register_process', 'Register one relevant process. Irrelevant processes must not be registered.', _process_schema()),
+        _tool('set_user_info', 'Leg de basisgegevens voor de intake vast.', _user_info_schema()),
+        _tool('register_process', 'Registreer één relevant proces. Registreer irrelevante processen niet hiermee.', _process_schema()),
         _tool(
             'mark_process_irrelevant',
-            'Mark one configured process as checked and not relevant. Use this for every configured process that does not apply.',
+            'Markeer één actief proces als gecontroleerd en niet relevant.',
             _irrelevant_process_schema(),
         ),
-        _tool('complete_discovery', 'Mark discovery complete after user info and all relevant processes have been registered.', {
+        _tool('complete_discovery', 'Rond af nadat basisgegevens en alle actieve processen zijn verantwoord.', {
             'type': 'object',
             'properties': {
                 'summary': {'type': 'string'},
@@ -258,17 +258,17 @@ def _process_schema() -> dict[str, Any]:
     return {
         'type': 'object',
         'properties': {
-            'id': {'type': 'string', 'description': 'Stable process id. Use configured id or dynamic:<source>:<id>.'},
+            'id': {'type': 'string', 'description': 'Stabiele proces-id. Gebruik de geconfigureerde id of dynamic:<bron>:<id>.'},
             'organisation': {'type': 'string'},
             'title': {'type': 'string'},
             'summary': {'type': 'string'},
-            'state': {'type': 'string', 'enum': ['open', 'blocked', 'done', 'pending']},
+            'state': {'type': 'string', 'enum': ['open', 'blocked', 'pending']},
             'handled_by': {'type': 'string', 'enum': ['you', 'us']},
-            'deadline': {'type': ['string', 'null'], 'description': 'ISO date when a concrete due date is known. Do not also set urgent.'},
-            'urgent': {'type': ['boolean', 'null'], 'description': 'True only when no deadline exists but immediate attention is needed.'},
+            'deadline': {'type': ['string', 'null'], 'description': 'ISO-datum als een concrete deadline bekend is. Gebruik niet tegelijk urgent.'},
+            'urgent': {'type': ['boolean', 'null'], 'description': 'Alleen true als er geen deadline is maar direct aandacht nodig is.'},
             'blocked_reason': {'type': ['string', 'null']},
-            'available_from': {'type': ['string', 'null'], 'description': 'ISO date when a blocked process becomes actionable.'},
-            'reason': {'type': 'string', 'description': 'Why this process is relevant.'},
+            'available_from': {'type': ['string', 'null'], 'description': 'ISO-datum waarop een geblokkeerd proces beschikbaar wordt.'},
+            'reason': {'type': 'string', 'description': 'Waarom dit proces relevant is, in duidelijke Nederlandse tekst.'},
             'evidence': {
                 'type': 'array',
                 'items': {
@@ -344,6 +344,21 @@ def _validate_deadline_xor_urgent(process: dict[str, Any]):
 
 
 def _validate_process_policy(process: dict[str, Any]):
+    if process.get('state') == 'done':
+        raise ValueError(
+            f"Process {process['id']} may not be done during intake discovery. "
+            'The intake agent discovers tasks but does not complete them.'
+        )
+    if process.get('state') == 'blocked' and not process.get('blocked_reason'):
+        raise ValueError(f"Blocked process {process['id']} requires blocked_reason.")
+    if process.get('form') and process.get('handled_by') != 'you':
+        raise ValueError(
+            f"Process {process['id']} needs user input and must be handled_by you."
+        )
+    if process.get('amount') and process.get('handled_by') != 'you':
+        raise ValueError(
+            f"Payment process {process['id']} must be handled_by you."
+        )
     if process.get('form'):
         _validate_ag_ui_form(process['id'], process['form'])
     policy = _process_policy(process['id'])
