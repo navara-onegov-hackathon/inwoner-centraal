@@ -419,6 +419,8 @@ def _validate_payment_button_required(process: dict[str, Any]):
             raise ValueError(f"Step {process['id']} requires an ag-ui form for the demo Betalen button.")
         if form.get('submit_label') != 'Betalen':
             raise ValueError(f"Form for {process['id']} must use submit_label Betalen.")
+        if form.get('fields') != []:
+            raise ValueError(f"Form for {process['id']} must not contain fields; it should show only the Betalen button.")
 
 
 def _validate_irrelevant_process_id(process_id: str):

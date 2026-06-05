@@ -36,11 +36,10 @@ export function Dashboard({ welcomeName, onNavigate }: DashboardProps) {
   return (
     <div className="mx-auto max-w-5xl px-8 py-8">
       <h1 className="mb-8 text-[2rem] font-bold leading-tight text-gray-900">
-        Welkom <span className="font-bold">{welcomeName}</span>
+        Wat kan ik waar vinden, {welcomeName}?
       </h1>
 
       <section>
-        <h2 className="mb-4 text-[15px] font-semibold text-gray-900">Wat kan ik waar vinden?</h2>
 
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
           {quickLinks.map((link, index) => {

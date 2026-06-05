@@ -7,28 +7,26 @@ import {
   type StappenplanRow as StappenplanRowModel,
   type StappenplanTabId,
 } from '../../lib/mapOverzichtToStappenplanTabs';
-import type { BegeleidingsVoorkeur } from '../../types/begeleiding';
 import type { OverzichtResponse, StatusBoard } from '../../types/overzicht';
 import { StappenplanRow } from './StappenplanRow';
 
 interface StappenplanOverzichtPanelProps {
   partitioned: OverzichtResponse & { statusBoard: StatusBoard };
   isUitgebreid: boolean;
-  voorkeur: BegeleidingsVoorkeur;
   onOverzichtChange: (next: OverzichtResponse | null) => void;
 }
 
-const tabs: { id: StappenplanTabId; label: string }[] = [
+const userTabs: { id: StappenplanTabId; label: string }[] = [
   { id: 'urgent', label: 'Urgent' },
   { id: 'nog-te-doen', label: 'Nog te doen' },
   { id: 'gedaan', label: 'Gedaan' },
-  { id: 'wat-doen-wij', label: 'Wat wij doen' },
 ];
+
+const watWijDoenTab = { id: 'wat-doen-wij' as const, label: 'Wat wij doen' };
 
 export function StappenplanOverzichtPanel({
   partitioned,
   isUitgebreid,
-  voorkeur,
   onOverzichtChange,
 }: StappenplanOverzichtPanelProps) {
   const [activeTab, setActiveTab] = useState<StappenplanTabId>('urgent');
@@ -104,24 +102,27 @@ export function StappenplanOverzichtPanel({
         </p>
       </section>
 
-      <div className="flex gap-8 overflow-x-auto border-b border-gray-200 px-6">
-        {tabs.map((tab) => (
-          <button
+      <div className="flex items-end gap-8 overflow-x-auto border-b border-gray-200 px-6">
+        {userTabs.map((tab) => (
+          <TabButton
             key={tab.id}
-            type="button"
-            onClick={() => {
+            tab={tab}
+            active={activeTab === tab.id}
+            onSelect={() => {
               setActiveTab(tab.id);
               setExpandedId(null);
             }}
-            className={`shrink-0 border-b-2 px-1 pb-3 pt-4 text-[15px] transition-colors ${
-              activeTab === tab.id
-                ? 'border-[#007AC8] font-semibold text-[#007AC8]'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            {tab.label}
-          </button>
+          />
         ))}
+        <div className="mb-3.5 h-4 w-px shrink-0 bg-gray-200" aria-hidden />
+        <TabButton
+          tab={watWijDoenTab}
+          active={activeTab === watWijDoenTab.id}
+          onSelect={() => {
+            setActiveTab(watWijDoenTab.id);
+            setExpandedId(null);
+          }}
+        />
       </div>
 
       <div className="divide-y divide-gray-200">
@@ -141,7 +142,6 @@ export function StappenplanOverzichtPanel({
               key={row.id}
               row={row}
               overzicht={partitioned}
-              voorkeur={voorkeur}
               isUitgebreid={isUitgebreid}
               onOverzichtChange={onOverzichtChange}
               expanded={expandedId === row.id}
@@ -151,6 +151,30 @@ export function StappenplanOverzichtPanel({
         )}
       </div>
     </div>
+  );
+}
+
+function TabButton({
+  tab,
+  active,
+  onSelect,
+}: {
+  tab: { id: StappenplanTabId; label: string };
+  active: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`shrink-0 border-b-2 px-1 pb-3 pt-4 text-[15px] transition-colors ${
+        active
+          ? 'border-[#007AC8] font-semibold text-[#007AC8]'
+          : 'border-transparent text-gray-600 hover:text-gray-900'
+      }`}
+    >
+      {tab.label}
+    </button>
   );
 }
 

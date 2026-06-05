@@ -34,7 +34,7 @@
     "title": "WLZ-factuur betalen",
     "category": "fixed",
     "payment_button_required": true,
-    "notes": "Relevant when CAK data shows an outstanding WLZ invoice or related correspondence. For the demo this step needs a visible Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen."
+    "notes": "Relevant when CAK data shows an outstanding WLZ invoice or related correspondence. For the demo this step needs a visible Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen and whose fields array is empty."
   },
   {
     "id": "cak-incasso-mislukt-oplossen",
@@ -42,7 +42,7 @@
     "title": "Mislukte incasso oplossen",
     "category": "fixed",
     "payment_button_required": true,
-    "notes": "Relevant when CAK data shows a failed direct debit or unresolved payment issue. For the demo this step needs a visible Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen."
+    "notes": "Relevant when CAK data shows a failed direct debit or unresolved payment issue. For the demo this step needs a visible Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen and whose fields array is empty."
   },
   {
     "id": "toeslagen-zorg-herziening-beoordelen",
@@ -59,7 +59,7 @@
     "title": "Terugvordering zorgtoeslag afhandelen",
     "category": "fixed",
     "payment_button_required": true,
-    "notes": "Relevant when discovered data shows a healthcare allowance repayment or recovery. For the demo this step needs a visible Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen.",
+    "notes": "Relevant when discovered data shows a healthcare allowance repayment or recovery. For the demo this step needs a visible Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen and whose fields array is empty.",
     "skip": true,
     "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
@@ -87,7 +87,7 @@
     "title": "Late naheffing of rekeningnummer-uitvraag afhandelen",
     "category": "fixed",
     "payment_button_required": true,
-    "notes": "Relevant when discovered data shows a late assessment, repayment, or bank account request. If the relevant step is about paying, show a Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen.",
+    "notes": "Relevant when discovered data shows a late assessment, repayment, or bank account request. If the relevant step is about paying, show a Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen and whose fields array is empty.",
     "skip": true,
     "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
@@ -137,7 +137,7 @@
     "category": "fixed",
     "always_include": true,
     "payment_button_required": true,
-    "notes": "Gemeente may not expose an API yet. Include if peildatum or local tax obligations plausibly apply. If the relevant step is about paying municipal taxes, show a Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen."
+    "notes": "Gemeente may not expose an API yet. Include if peildatum or local tax obligations plausibly apply. If the relevant step is about paying municipal taxes, show a Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen and whose fields array is empty."
   },
   {
     "id": "waterschap-aanslag",
@@ -145,7 +145,7 @@
     "title": "Waterschapsbelasting betalen",
     "category": "fixed",
     "payment_button_required": true,
-    "notes": "Relevant when obligations or correspondence show a water authority assessment. For the demo this step needs a visible Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen."
+    "notes": "Relevant when obligations or correspondence show a water authority assessment. For the demo this step needs a visible Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen and whose fields array is empty."
   },
   {
     "id": "rdw-overschrijven",

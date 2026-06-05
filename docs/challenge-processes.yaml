@@ -72,7 +72,7 @@ processes:
       Voor de demo heeft deze stap een zichtbare Betalen-knop nodig. Die knop
       voert geen echte betaling uit. Als de stap relevant is, registreert de
       agent handled_by you, action_type betalen en een ag-ui formulier met
-      submit_label Betalen.
+      submit_label Betalen en fields [].
     relevant_if:
       any:
         - "verplichtingen contains item where organisatie == 'CAK'"
@@ -93,7 +93,7 @@ processes:
       Voor de demo heeft deze stap een zichtbare Betalen-knop nodig. Die knop
       voert geen echte betaling uit. Als de stap relevant is, registreert de
       agent handled_by you, action_type betalen en een ag-ui formulier met
-      submit_label Betalen.
+      submit_label Betalen en fields [].
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'CAK.INCASSO-MISLUKT'"
@@ -127,7 +127,7 @@ processes:
       Voor de demo heeft deze stap een zichtbare Betalen-knop nodig. Die knop
       voert geen echte betaling uit. Als de stap relevant is, registreert de
       agent handled_by you, action_type betalen en een ag-ui formulier met
-      submit_label Betalen.
+      submit_label Betalen en fields [].
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'TOESLAGEN.TERUGVORDERING-ZORG'"
@@ -177,7 +177,8 @@ processes:
     note: >
       Als deze stap over betalen gaat, heeft de demo een zichtbare Betalen-knop
       nodig. Die knop voert geen echte betaling uit. Registreer handled_by you,
-      action_type betalen en een ag-ui formulier met submit_label Betalen.
+      action_type betalen en een ag-ui formulier met submit_label Betalen en
+      fields [].
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'TOESLAGEN.NAHEFFING-LATE-ZORG'"
@@ -263,7 +264,8 @@ processes:
     note: >
       Als deze stap over betalen gaat, heeft de demo een zichtbare Betalen-knop
       nodig. Die knop voert geen echte betaling uit. Registreer handled_by you,
-      action_type betalen en een ag-ui formulier met submit_label Betalen.
+      action_type betalen en een ag-ui formulier met submit_label Betalen en
+      fields [].
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'GEMEENTE.LOKALE-BELASTING'"
@@ -284,7 +286,7 @@ processes:
       Voor de demo heeft deze stap een zichtbare Betalen-knop nodig. Die knop
       voert geen echte betaling uit. Als de stap relevant is, registreert de
       agent handled_by you, action_type betalen en een ag-ui formulier met
-      submit_label Betalen.
+      submit_label Betalen en fields [].
     relevant_if:
       any:
         - "verplichtingen contains item where organisatie == 'Waterschap'"

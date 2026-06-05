@@ -6,23 +6,18 @@ import {
   FileText,
   CheckCircle2,
   Landmark,
-  Loader2,
   Shield,
   Wallet,
   type LucideIcon,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import type { BegeleidingsVoorkeur } from '../../types/begeleiding';
 import type { StappenplanRow as StappenplanRowModel } from '../../lib/mapOverzichtToStappenplanTabs';
-import { canOfferAgentForTask, delegateTaskToAgent } from '../../lib/agentDelegation';
-import { completeTask, markTaskAwaitingSelfCompletion, readCaseData } from '../../lib/overzichtState';
+import { completeTask, readCaseData } from '../../lib/overzichtState';
 import type { AGUIField, OverzichtResponse, ResolutionOption, Taak } from '../../types/overzicht';
-import { TaskActionChoiceDialog } from './TaskActionChoiceDialog';
 
 interface StappenplanRowProps {
   row: StappenplanRowModel;
   overzicht: OverzichtResponse;
-  voorkeur: BegeleidingsVoorkeur;
   isUitgebreid: boolean;
   onOverzichtChange: (next: OverzichtResponse | null) => void;
   expanded: boolean;
@@ -32,7 +27,6 @@ interface StappenplanRowProps {
 export function StappenplanRow({
   row,
   overzicht,
-  voorkeur,
   isUitgebreid,
   onOverzichtChange,
   expanded,
@@ -45,11 +39,18 @@ export function StappenplanRow({
 
   const statusLabel = row.completed
     ? 'Gedaan'
+    : taak
+      ? taak.state === 'blocked'
+        ? 'Nog niet beschikbaar'
+        : taak.handled_by === 'us'
+          ? 'In behandeling'
+          : 'Nog te doen'
+      : null;
+  const statusClassName = row.completed
+    ? 'text-green-700'
     : taak?.state === 'blocked'
-      ? 'Nog niet beschikbaar'
-      : taak?.handled_by === 'us'
-        ? 'In behandeling'
-        : 'Nog te doen';
+      ? 'text-gray-600'
+      : 'text-[#007AC8]';
 
   return (
     <div
@@ -73,9 +74,7 @@ export function StappenplanRow({
         <div className="flex shrink-0 items-start gap-2">
           <div className="flex flex-col items-end gap-1.5">
             <div className="flex items-center gap-2 text-sm">
-              <span className={row.completed ? 'text-green-700' : taak?.state === 'blocked' ? 'text-gray-600' : 'text-[#007AC8]'}>
-                {statusLabel}
-              </span>
+              {statusLabel && <span className={statusClassName}>{statusLabel}</span>}
               {row.locked && (
                 <span className="rounded bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
                   Vergrendeld
@@ -99,7 +98,6 @@ export function StappenplanRow({
             <TaakExpandedDetail
               taak={taak}
               overzicht={overzicht}
-              voorkeur={voorkeur}
               isUitgebreid={isUitgebreid}
               onOverzichtChange={onOverzichtChange}
             />
@@ -115,23 +113,15 @@ export function StappenplanRow({
 function TaakExpandedDetail({
   taak,
   overzicht,
-  voorkeur,
   isUitgebreid,
   onOverzichtChange,
 }: {
   taak: Taak;
   overzicht: OverzichtResponse;
-  voorkeur: BegeleidingsVoorkeur;
   isUitgebreid: boolean;
   onOverzichtChange: (next: OverzichtResponse | null) => void;
 }) {
   const [message, setMessage] = useState<string | null>(null);
-  const [choiceOpen, setChoiceOpen] = useState(false);
-  const [processing, setProcessing] = useState(false);
-  const [pendingAction, setPendingAction] = useState<{
-    actionLabel: string;
-    selfCompletionData?: Record<string, unknown>;
-  } | null>(null);
 
   const brieven = overzicht.correspondentie.filter((b) => taak.bron_brief_ids.includes(b.id));
   const verplichtingen = overzicht.verplichtingen.filter((v) =>
@@ -146,87 +136,29 @@ function TaakExpandedDetail({
     setMessage(successMessage ?? 'Stap gemarkeerd als afgerond.');
   };
 
-  const runWithActionChoice = (
-    actionLabel: string,
-    options?: {
-      selfCompletionData?: Record<string, unknown>;
-      directSelfComplete?: () => void;
-    },
-  ) => {
-    if (canOfferAgentForTask(taak, voorkeur)) {
-      setPendingAction({
-        actionLabel,
-        selfCompletionData: options?.selfCompletionData,
-      });
-      setChoiceOpen(true);
-      return;
-    }
-    options?.directSelfComplete?.();
-  };
-
-  const handleChooseSelf = () => {
-    const action = pendingAction;
-    setChoiceOpen(false);
-    setPendingAction(null);
-    if (!action) return;
-
-    const next = markTaskAwaitingSelfCompletion(
-      overzicht,
-      taak.id,
-      action.selfCompletionData ?? {},
-    );
-    onOverzichtChange(next);
-    setMessage(
-      'Regel dit op uw eigen manier. Laat het ons weten wanneer u klaar bent via de knop hieronder.',
-    );
-  };
-
-  const handleChooseAutomatic = async () => {
-    setProcessing(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 900));
-
-    const next = delegateTaskToAgent(overzicht, taak.id);
-    setProcessing(false);
-    setChoiceOpen(false);
-    setPendingAction(null);
-
-    if (!next) {
-      setMessage('Dit kon op dit moment niet automatisch worden geregeld. Probeer het later opnieuw.');
-      return;
-    }
-
-    onOverzichtChange(next);
-    setMessage('Wij proberen dit voor u te regelen. U ziet voortgang onder Wat wij doen.');
-  };
-
-  const handleConfirmSelfCompletion = () => {
-    completeWithPatch(
-      taak.self_completion_data ?? {},
-      'Bedankt. Deze stap is gemarkeerd als afgerond.',
-    );
-  };
-
   return (
     <div className="space-y-4">
-      <div className="mb-4 grid gap-4 sm:grid-cols-3">
-        <div>
-          <p className="text-xs text-gray-500">Organisatie</p>
-          <p className="text-sm font-semibold text-gray-900">{taak.organisatie}</p>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <p className="text-xs text-gray-500">Organisatie</p>
+            <p className="text-sm font-semibold text-gray-900">{taak.organisatie}</p>
+          </div>
+          {taak.deadline && (
+            <div>
+              <p className="text-xs text-gray-500">Uiterlijk vóór</p>
+              <p className="text-sm font-semibold text-gray-900">{formatDeadline(taak.deadline)}</p>
+            </div>
+          )}
+          {taak.bedrag && (
+            <div>
+              <p className="text-xs text-gray-500">Bedrag</p>
+              <span className="inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-sm font-semibold text-gray-800">
+                € {formatBedrag(taak.bedrag.bedrag)}
+              </span>
+            </div>
+          )}
         </div>
-        {taak.deadline && (
-          <div>
-            <p className="text-xs text-gray-500">Uiterlijk vóór</p>
-            <p className="text-sm font-semibold text-gray-900">{formatDeadline(taak.deadline)}</p>
-          </div>
-        )}
-        {taak.bedrag && (
-          <div>
-            <p className="text-xs text-gray-500">Bedrag</p>
-            <span className="inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-sm font-semibold text-gray-800">
-              € {formatBedrag(taak.bedrag.bedrag)}
-            </span>
-          </div>
-        )}
       </div>
 
       <p className="text-sm leading-relaxed text-gray-700">{taak.samenvatting}</p>
@@ -252,64 +184,7 @@ function TaakExpandedDetail({
         </div>
       )}
 
-      {taak.awaiting_self_completion && (
-        <div className="rounded-lg border border-green-200 bg-green-50/60 p-4">
-          <p className="text-sm text-gray-700">
-            U regelt deze stap zelf. Geef aan wanneer u klaar bent, dan sluiten wij deze stap af in
-            uw overzicht. Liever toch dat wij het proberen? Dat kan nog steeds.
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={handleConfirmSelfCompletion}
-              disabled={processing}
-              className="inline-flex items-center gap-2 rounded-md bg-green-700 px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <CheckCircle2 className="h-4 w-4" aria-hidden />
-              Ik heb dit aan mijn kant afgerond
-            </button>
-            {canOfferAgentForTask(taak, voorkeur) && (
-              <button
-                type="button"
-                onClick={() => void handleChooseAutomatic()}
-                disabled={processing}
-                className="inline-flex items-center gap-2 rounded-md border border-[#007AC8] bg-white px-5 py-2 text-sm font-semibold text-[#007AC8] hover:bg-[#E8F4FC]/60 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {processing && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-                {processing ? 'Bezig...' : 'Toch automatisch laten regelen'}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {taak.toon_cta_in_lijst && taak.cta_label && !taak.awaiting_self_completion && (
-        <div>
-          <button
-            type="button"
-            disabled={actionDisabled}
-            onClick={() =>
-              runWithActionChoice(taak.cta_label!, {
-                directSelfComplete: () => {
-                  const next = markTaskAwaitingSelfCompletion(overzicht, taak.id);
-                  onOverzichtChange(next);
-                  setMessage(
-                    'Regel dit op uw eigen manier. Laat het ons weten wanneer u klaar bent via de knop hieronder.',
-                  );
-                },
-              })
-            }
-            className="rounded-md bg-[#007AC8] px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600 disabled:opacity-80"
-          >
-            {taak.cta_label}
-          </button>
-          {actionDisabled && taak.blocked_reason && (
-            <p className="mt-2 text-xs text-gray-500">{taak.blocked_reason}</p>
-          )}
-        </div>
-      )}
-
-      {taak.resolution_options && taak.resolution_options.length > 0 && !taak.awaiting_self_completion && (
+      {taak.resolution_options && taak.resolution_options.length > 0 && (
         <ResolutionOptions
           options={taak.resolution_options}
           disabled={actionDisabled}
@@ -318,47 +193,23 @@ function TaakExpandedDetail({
               option.action === 'update_to_known_address'
                 ? 'Het bekende woonadres wordt gebruikt als correspondentieadres.'
                 : 'Deze stap is afgerond zonder adreswijziging.';
-            runWithActionChoice(option.label, {
-              selfCompletionData: option.payload ?? {},
-              directSelfComplete: () =>
-                completeWithPatch(option.payload ?? {}, successMessage),
-            });
+            completeWithPatch(option.payload ?? {}, successMessage);
           }}
         />
       )}
 
-      {taak.form && !taak.awaiting_self_completion && (
+      {taak.form && (
         <AGUIFormCard
           task={taak}
           disabled={actionDisabled}
           onSubmit={(values) =>
-            runWithActionChoice(taak.form!.submit_label, {
-              selfCompletionData: values,
-              directSelfComplete: () =>
-                completeWithPatch(
-                  values,
-                  'De ingevulde gegevens zijn opgeslagen voor volgende stappen.',
-                ),
-            })
+            completeWithPatch(
+              values,
+              'De ingevulde gegevens zijn opgeslagen voor volgende stappen.',
+            )
           }
         />
       )}
-
-      <TaskActionChoiceDialog
-        open={choiceOpen}
-        onOpenChange={(open) => {
-          if (!open && !processing) {
-            setChoiceOpen(false);
-            setPendingAction(null);
-          }
-        }}
-        actionLabel={pendingAction?.actionLabel ?? ''}
-        taskTitle={taak.titel}
-        taskOrganisatie={taak.organisatie}
-        processing={processing}
-        onChooseAutomatic={() => void handleChooseAutomatic()}
-        onChooseSelf={handleChooseSelf}
-      />
 
       {message && (
         <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
@@ -459,41 +310,43 @@ function AGUIFormCard({
         <p className="mt-1 text-sm text-gray-700">{task.form.description}</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {visibleFields.map((field) => (
-          <label key={field.name} className="flex flex-col gap-1 text-sm text-gray-800">
-            <span className="font-medium">
-              {field.label}
-              {field.required ? ' *' : ''}
-            </span>
-            {field.type === 'select' ? (
-              <select
-                value={values[field.name] ?? ''}
-                onChange={(e) => setValues((current) => ({ ...current, [field.name]: e.target.value }))}
-                className="rounded-md border border-gray-300 bg-white px-3 py-2"
-                required={field.required}
-                disabled={disabled}
-              >
-                <option value="">Maak een keuze</option>
-                {field.options?.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                value={values[field.name] ?? ''}
-                onChange={(e) => setValues((current) => ({ ...current, [field.name]: e.target.value }))}
-                className="rounded-md border border-gray-300 bg-white px-3 py-2"
-                placeholder={field.placeholder}
-                required={field.required}
-                disabled={disabled}
-              />
-            )}
-          </label>
-        ))}
-      </div>
+      {visibleFields.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {visibleFields.map((field) => (
+            <label key={field.name} className="flex flex-col gap-1 text-sm text-gray-800">
+              <span className="font-medium">
+                {field.label}
+                {field.required ? ' *' : ''}
+              </span>
+              {field.type === 'select' ? (
+                <select
+                  value={values[field.name] ?? ''}
+                  onChange={(e) => setValues((current) => ({ ...current, [field.name]: e.target.value }))}
+                  className="rounded-md border border-gray-300 bg-white px-3 py-2"
+                  required={field.required}
+                  disabled={disabled}
+                >
+                  <option value="">Maak een keuze</option>
+                  {field.options?.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  value={values[field.name] ?? ''}
+                  onChange={(e) => setValues((current) => ({ ...current, [field.name]: e.target.value }))}
+                  className="rounded-md border border-gray-300 bg-white px-3 py-2"
+                  placeholder={field.placeholder}
+                  required={field.required}
+                  disabled={disabled}
+                />
+              )}
+            </label>
+          ))}
+        </div>
+      )}
 
       <button
         type="submit"
@@ -530,38 +383,30 @@ function getDefaultFieldValue(field: AGUIField, task: Taak) {
   if (field.name === 'new_holder_name') {
     return typeof selfHolder.name === 'string' ? selfHolder.name : '';
   }
+  if (field.name === 'reason') {
+    return 'erven';
+  }
   return '';
 }
 
 function buildTaskSubmissionPayload(task: Taak, values: Record<string, string>) {
-  if (task.id !== 'taak-rdw-overschrijven') {
+  if (task.id !== 'rdw-overschrijven') {
     return values;
   }
 
-  const defaults = (task.form?.meta?.defaults ?? {}) as Record<string, unknown>;
-  const selfHolder = (defaults.self_holder ?? {}) as Record<string, string>;
-  const isTransfer = values.vehicle_action === 'transfer';
-  const transferTarget = values.transfer_target;
+  const isTransfer = values.vehicle_action === 'overschrijven';
 
   if (!isTransfer) {
     return {
       vehicle_action: values.vehicle_action,
-      rechtsgrond: defaults.rechtsgrond ?? 'ERFRECHT',
     };
   }
 
   return {
     vehicle_action: values.vehicle_action,
-    rechtsgrond: defaults.rechtsgrond ?? 'ERFRECHT',
-    new_holder_bsn:
-      isTransfer && transferTarget === 'self' ? selfHolder.bsn : values.new_holder_bsn,
-    new_holder_name:
-      isTransfer && transferTarget === 'self' ? selfHolder.name : values.new_holder_name,
-    new_holder_address_straat: values.new_holder_address_straat,
-    new_holder_address_huisnummer: values.new_holder_address_huisnummer,
-    new_holder_address_postcode: values.new_holder_address_postcode,
-    new_holder_address_stad: values.new_holder_address_stad,
-    new_holder_address_landcode: values.new_holder_address_landcode,
+    new_owner_bsn: values.new_owner_bsn,
+    new_owner_name: values.new_owner_name,
+    reason: values.reason,
   };
 }
 
