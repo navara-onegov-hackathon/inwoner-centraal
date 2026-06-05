@@ -4,6 +4,7 @@ import { SlideOutSidebar } from '../shared/components/SlideOutSidebar';
 import { NextShell } from './components/layout/NextShell';
 import { StartWizard } from './components/onboarding/StartWizard';
 import { BerichtenboxPage } from './components/pages/BerichtenboxPage';
+import { BrievenPage } from './components/pages/BrievenPage';
 import { Dashboard } from './components/pages/Dashboard';
 import { OverzichtPage } from './components/pages/OverzichtPage';
 import { WatBetekentPage } from './components/pages/WatBetekentPage';
@@ -32,6 +33,11 @@ export function NextApp() {
     setActiveSection('stappenplan');
   };
 
+  const resetOnboarding = () => {
+    setActiveSection('stappenplan');
+    reset();
+  };
+
   const renderContent = () => {
     if (!completed) {
       return (
@@ -42,7 +48,7 @@ export function NextApp() {
           onVoorkeurChange={setVoorkeur}
           onMeldingenChange={setMeldingen}
           onComplete={handleComplete}
-          onRestartDemo={reset}
+          onRestartDemo={resetOnboarding}
         />
       );
     }
@@ -52,6 +58,8 @@ export function NextApp() {
         return <Dashboard welcomeName={welcomeName} onNavigate={setActiveSection} />;
       case 'berichtenbox':
         return <BerichtenboxPage onNavigate={setActiveSection} />;
+      case 'brieven':
+        return <BrievenPage onBackToStappenplan={() => setActiveSection('stappenplan')} />;
       case 'stappenplan':
         return <OverzichtPage voorkeur={voorkeur} onNavigate={setActiveSection} />;
       case 'uitleg':
@@ -90,7 +98,7 @@ export function NextApp() {
         onBegeleidingChange={setVoorkeur}
         meldingenVoorkeur={completed ? meldingen : undefined}
         onMeldingenChange={setMeldingen}
-        onResetOnboarding={reset}
+        onResetOnboarding={resetOnboarding}
         sidebarOpen={sidebarOpen}
         onSidebarToggle={() => setSidebarOpen(true)}
         onSidebarClose={() => setSidebarOpen(false)}

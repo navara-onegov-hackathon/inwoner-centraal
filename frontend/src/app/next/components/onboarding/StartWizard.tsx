@@ -15,6 +15,7 @@ import { DelegatieAfgerondStep } from './steps/DelegatieAfgerondStep';
 import { DelegatieStep, type DelegatieGegevens } from './steps/DelegatieStep';
 import { MeldingenStep } from './steps/MeldingenStep';
 import { VerifyGegevensStep } from './steps/VerifyGegevensStep';
+import { ensureDemoCorrespondentie } from '../../lib/ensureDemoCorrespondentie';
 import type { OverzichtResponse, PersonaContext } from '../../types/overzicht';
 
 interface StartWizardProps {
@@ -68,9 +69,10 @@ export function StartWizard({
   const back = () => setStepIndex((i) => Math.max(i - 1, 0));
 
   const handleDiscoveryComplete = (result: OverzichtResponse) => {
-    setDiscoveryResult(result);
-    window.localStorage.setItem(OVERZICHT_STORAGE_KEY, JSON.stringify(result));
-    setGegevens((current) => prefillGegevensFromResult(current, result));
+    const normalized = ensureDemoCorrespondentie(result);
+    setDiscoveryResult(normalized);
+    window.localStorage.setItem(OVERZICHT_STORAGE_KEY, JSON.stringify(normalized));
+    setGegevens((current) => prefillGegevensFromResult(current, normalized));
   };
 
   if (delegatedTo) {

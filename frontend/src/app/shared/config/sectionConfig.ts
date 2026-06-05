@@ -1,6 +1,7 @@
 export const sectionLabels: Record<string, string> = {
   home: 'Overzicht',
   berichtenbox: 'Berichtenbox',
+  brieven: 'Correspondentie',
   stappenplan: 'Stappenplan',
   uitleg: 'Wat betekent dit voor u?',
 };
@@ -25,6 +26,11 @@ export const menuItems = [
     id: 'berichtenbox',
     label: sectionLabels.berichtenbox,
     description: 'Al uw digitale post',
+  },
+  {
+    id: 'brieven',
+    label: sectionLabels.brieven,
+    description: 'Welke post is al verzonden en wat komt nog',
   },
 ] as const;
 

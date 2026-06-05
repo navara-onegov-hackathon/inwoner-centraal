@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchOverzicht } from '../api/fetchOverzicht';
+import { ensureDemoCorrespondentie } from '../lib/ensureDemoCorrespondentie';
 import { OVERZICHT_STORAGE_KEY } from '../types/begeleiding';
 import type { OverzichtResponse } from '../types/overzicht';
 
@@ -12,7 +13,9 @@ export function useOverzicht() {
     try {
       const stored = window.localStorage.getItem(OVERZICHT_STORAGE_KEY);
       if (stored) {
-        setData(JSON.parse(stored) as OverzichtResponse);
+        const normalized = ensureDemoCorrespondentie(JSON.parse(stored) as OverzichtResponse);
+        setData(normalized);
+        window.localStorage.setItem(OVERZICHT_STORAGE_KEY, JSON.stringify(normalized));
         setLoading(false);
         return;
       }
@@ -20,7 +23,11 @@ export function useOverzicht() {
       /* fall through to fetch */
     }
     fetchOverzicht()
-      .then(setData)
+      .then((result) => {
+        const normalized = ensureDemoCorrespondentie(result);
+        setData(normalized);
+        window.localStorage.setItem(OVERZICHT_STORAGE_KEY, JSON.stringify(normalized));
+      })
       .catch(() => setError('Overzicht kon niet worden geladen.'))
       .finally(() => setLoading(false));
   }, []);

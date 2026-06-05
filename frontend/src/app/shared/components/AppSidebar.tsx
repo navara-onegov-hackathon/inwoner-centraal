@@ -1,4 +1,4 @@
-import { HeartHandshake, LayoutGrid, ListChecks, Mail, X } from 'lucide-react';
+import { FileText, HeartHandshake, LayoutGrid, ListChecks, Mail, X } from 'lucide-react';
 import { menuItems } from '../config/sectionConfig';
 
 interface AppSidebarProps {
@@ -10,6 +10,7 @@ interface AppSidebarProps {
 const icons = {
   home: LayoutGrid,
   berichtenbox: Mail,
+  brieven: FileText,
   stappenplan: ListChecks,
   uitleg: HeartHandshake,
 } as const;

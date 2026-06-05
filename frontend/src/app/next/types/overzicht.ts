@@ -129,12 +129,22 @@ export interface GeenActieItem {
 export interface RawBrief {
   id: string;
   organisatie: string;
+  brief_code: string;
   type: string;
   verzonden_op: string;
+  dagen_na_overlijden: number;
   actie_vereist: boolean;
   actie_omschrijving: string | null;
+  wettelijke_reactietermijn_dagen: number | null;
   aanhef: string;
   geadresseerde: string;
+  adres: {
+    straat: string;
+    huisnummer: string;
+    postcode: string;
+    woonplaats: string;
+    verzorgingstehuis?: boolean;
+  };
 }
 
 export interface RawVerplichting {

@@ -1,4 +1,4 @@
-import { ChevronRight, HeartHandshake, ListChecks, Mail } from 'lucide-react';
+import { ChevronRight, FileText, HeartHandshake, ListChecks, Mail } from 'lucide-react';
 
 interface DashboardProps {
   welcomeName: string;
@@ -23,6 +23,12 @@ const quickLinks = [
     title: 'Berichtenbox',
     description: 'Al uw digitale post van de overheid',
     icon: Mail,
+  },
+  {
+    id: 'brieven',
+    title: 'Correspondentie',
+    description: 'Welke post is al verzonden en wat komt nog',
+    icon: FileText,
   },
 ];
 

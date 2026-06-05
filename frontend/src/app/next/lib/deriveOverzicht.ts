@@ -310,12 +310,16 @@ function mapRawBrief(b: FixtureBrief): RawBrief {
   return {
     id: b.id,
     organisatie: b.organisatie,
+    brief_code: b.brief_code,
     type: b.type,
     verzonden_op: b.verzonden_op,
+    dagen_na_overlijden: b.dagen_na_overlijden,
     actie_vereist: b.actie_vereist,
     actie_omschrijving: b.actie_omschrijving,
+    wettelijke_reactietermijn_dagen: b.wettelijke_reactietermijn_dagen,
     aanhef: b.aanhef,
     geadresseerde: b.geadresseerde,
+    adres: b.adres,
   };
 }
 
