@@ -162,6 +162,94 @@ class GreenPTAgent:
 _DATA_FILE = Path(__file__).parent / 'data' / 'belastingdienst.jsonl'
 
 
+def _format_demo_address(address: Any) -> str:
+    if not isinstance(address, dict):
+        return str(address or '')
+
+    street = address.get('straat', '')
+    number = address.get('huisnummer', '')
+    postcode = address.get('postcode', '')
+    city = address.get('woonplaats', '')
+    return ' '.join(part for part in (f'{street} {number}'.strip(), postcode, city) if part)
+
+
+def _demo_response_rows(payload: Any) -> list[dict[str, str]]:
+    if not isinstance(payload, dict):
+        return []
+
+    if isinstance(payload.get('brieven'), list):
+        brieven = payload['brieven']
+    elif isinstance(payload.get('afwijkende_brieven'), list):
+        brieven = [
+            item['brief'] if isinstance(item, dict) and isinstance(item.get('brief'), dict) else item
+            for item in payload['afwijkende_brieven']
+        ]
+    else:
+        return []
+
+    rows = []
+    for brief in brieven:
+        if not isinstance(brief, dict):
+            continue
+        rows.append(
+            {
+                'brief_code': str(brief.get('brief_code', '')),
+                'verzonden_op': str(brief.get('verzonden_op', '')),
+                'adres': _format_demo_address(brief.get('adres')),
+            }
+        )
+    return rows
+
+
+def _format_demo_response_table(text: str) -> str:
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        return text
+
+    rows = _demo_response_rows(payload)
+    if not rows:
+        if isinstance(payload, dict) and payload.get('message'):
+            return str(payload['message'])
+        return '(no brieven)'
+
+    headers = ('brief_code', 'verzonden_op', 'adres')
+    widths = {
+        header: max(len(header), *(len(row[header]) for row in rows))
+        for header in headers
+    }
+    header_row = ' | '.join(header.ljust(widths[header]) for header in headers)
+    separator = '-+-'.join('-' * widths[header] for header in headers)
+    data_rows = [
+        ' | '.join(row[header].ljust(widths[header]) for header in headers)
+        for row in rows
+    ]
+
+    return '\n'.join([header_row, separator, *data_rows])
+
+
+def _format_demo_message(text: str) -> str:
+    """Pretty-print JSON log bodies while keeping plain text readable."""
+    if not text:
+        return '(empty)'
+
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        return text
+
+    return json.dumps(parsed, indent=2, ensure_ascii=False)
+
+
+def _print_demo_message(title: str, text: str, *, compact_response: bool = False) -> None:
+    print(f'\n=== A2A {title} ===', flush=True)
+    if compact_response:
+        print(_format_demo_response_table(text), flush=True)
+        return
+
+    print(_format_demo_message(text), flush=True)
+
+
 class BelastingdienstAgentExecutor(AgentExecutor):
     """AgentExecutor for querying Belastingdienst correspondence via LLM tool-calling."""
 
@@ -215,6 +303,7 @@ class BelastingdienstAgentExecutor(AgentExecutor):
 
         # 2. Parse incoming message — expect JSON {"bsn": "...", "query": "..."}
         raw = get_message_text(context.message) or ''
+        _print_demo_message('REQUEST', raw)
         try:
             payload = json.loads(raw)
             bsn = payload.get('bsn', '')
@@ -260,6 +349,8 @@ class BelastingdienstAgentExecutor(AgentExecutor):
             # LLM responded without tool use — wrap text response
             text = choice.message.content or ''
             result = json.dumps({'brieven': [], 'count': 0, 'message': text}, ensure_ascii=False)
+
+        _print_demo_message('RESPONSE', result, compact_response=True)
 
         # 5. Emit JSON artifact and mark completed
         await task_updater.add_artifact(parts=[new_text_part(text=result, media_type='application/json')])
