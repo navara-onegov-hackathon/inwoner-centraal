@@ -47,35 +47,45 @@
     "organisation": "Toeslagen",
     "title": "Herziene beschikking zorgtoeslag beoordelen",
     "category": "fixed",
-    "notes": "Relevant when correspondence or obligations show a healthcare allowance recalculation."
+    "notes": "Relevant when correspondence or obligations show a healthcare allowance recalculation.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "toeslagen-zorg-terugvordering-afhandelen",
     "organisation": "Toeslagen",
     "title": "Terugvordering zorgtoeslag afhandelen",
     "category": "fixed",
-    "notes": "Relevant when discovered data shows a healthcare allowance repayment or recovery."
+    "notes": "Relevant when discovered data shows a healthcare allowance repayment or recovery.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "toeslagen-huur-herberekening-volgen",
     "organisation": "Toeslagen",
     "title": "Huurtoeslag herberekening volgen",
     "category": "fixed",
-    "notes": "Relevant when partner or household data suggests rent allowance recalculation after death."
+    "notes": "Relevant when partner or household data suggests rent allowance recalculation after death.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "toeslagen-late-definitieve-toekenning-volgen",
     "organisation": "Toeslagen",
     "title": "Definitieve toekenning zorgtoeslag volgen",
     "category": "fixed",
-    "notes": "Relevant when final healthcare allowance assessment is expected or discovered."
+    "notes": "Relevant when final healthcare allowance assessment is expected or discovered.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "toeslagen-late-naheffing-afhandelen",
     "organisation": "Toeslagen",
     "title": "Late naheffing of rekeningnummer-uitvraag afhandelen",
     "category": "fixed",
-    "notes": "Relevant when discovered data shows a late assessment, repayment, or bank account request."
+    "notes": "Relevant when discovered data shows a late assessment, repayment, or bank account request.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "belastingdienst-contactpersoon-doorgeven",
@@ -104,7 +114,9 @@
     "title": "Gemeentelijke condoleance tonen",
     "category": "fixed",
     "always_include": true,
-    "notes": "Gemeente may not expose an API yet. Include only when policy or case information makes the step meaningful."
+    "notes": "Gemeente may not expose an API yet. Include only when policy or case information makes the step meaningful.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "gemeente-parkeervergunning",
@@ -156,21 +168,25 @@
     "organisation": "UWV",
     "title": "Stopzetting WW of WIA tonen",
     "category": "fixed",
-    "notes": "Relevant when discovered data indicates a UWV benefit stop or informational notice."
+    "notes": "Relevant when discovered data indicates a UWV benefit stop or informational notice.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "duo-studieschuld-vervalt-tonen",
     "organisation": "DUO",
     "title": "Vervallen studieschuld tonen",
     "category": "fixed",
-    "notes": "Relevant when discovered data indicates a DUO debt cancellation or related notice."
+    "notes": "Relevant when discovered data indicates a DUO debt cancellation or related notice.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "partnerrecht-nabestaandenpensioen",
-    "organisation": "UWV",
+    "organisation": "Pensioenfonds",
     "title": "Mogelijk nabestaandenpensioen onderzoeken",
     "category": "fixed",
-    "notes": "Relevant when employment, pension, or partner data suggests a surviving dependant pension may exist."
+    "notes": "Relevant when employment, pension, or partner data suggests a surviving dependant pension may exist. For the demo, mark irrelevant when no pension-fund or employment evidence is discovered."
   },
   {
     "id": "partnerrecht-bijstand-of-inkomensondersteuning",
@@ -184,29 +200,36 @@
     "organisation": "KVK",
     "title": "Onderneming uitschrijven, liquideren, of voortzetten",
     "category": "fixed",
-    "notes": "Relevant when KVK or case data shows the deceased had a business. Future KVK API should be added to the API registry without code changes."
+    "notes": "Relevant when KVK or case data shows the deceased had a business. Future KVK API should be added to the API registry without code changes.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "rvo-wbso-afhandelen",
     "organisation": "RVO",
     "title": "WBSO-verplichting afhandelen",
     "category": "fixed",
-    "notes": "Relevant when RVO or business data shows WBSO obligations."
+    "notes": "Relevant when RVO or business data shows WBSO obligations.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "rvo-subsidie-eindafrekening-of-voortgang",
     "organisation": "RVO",
     "title": "RVO-subsidieverplichtingen afhandelen",
     "category": "fixed",
-    "notes": "Relevant when RVO or business data shows subsidy obligations."
+    "notes": "Relevant when RVO or business data shows subsidy obligations.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "gemeente-akte-van-overlijden-aanvragen",
     "organisation": "Gemeente",
     "title": "Akte van overlijden aanvragen",
     "category": "non_challenge",
-    "demo_default_applicability": "not_applicable",
-    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data."
+    "demo_default_applicability": "applicable",
+    "notes": "For this demo, this process is always relevant without an external applicability check.",
+    "demo_always_relevant": true
   },
   {
     "id": "notaris-verklaring-van-erfrecht",
@@ -221,8 +244,9 @@
     "organisation": "Diverse",
     "title": "Geadresseerde reclamepost stopzetten",
     "category": "non_challenge",
-    "demo_default_applicability": "not_applicable",
-    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data."
+    "demo_default_applicability": "applicable",
+    "notes": "For this demo, this process is always relevant without an external applicability check.",
+    "demo_always_relevant": true
   },
   {
     "id": "contracten-abonnementen-opzeggen",
@@ -230,7 +254,9 @@
     "title": "Abonnementen en contracten opzeggen of wijzigen",
     "category": "non_challenge",
     "demo_default_applicability": "not_applicable",
-    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data."
+    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "verzekeringen-aanpassen-of-opzeggen",
@@ -238,7 +264,9 @@
     "title": "Verzekeringen aanpassen of opzeggen",
     "category": "non_challenge",
     "demo_default_applicability": "not_applicable",
-    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data."
+    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
   {
     "id": "hypotheekverstrekker-melden",
@@ -246,6 +274,8 @@
     "title": "Overlijden melden bij hypotheekverstrekker",
     "category": "non_challenge",
     "demo_default_applicability": "not_applicable",
-    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data."
+    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data.",
+    "skip": true,
+    "skip_reason": "Skipped in the demo to keep active process coverage focused."
   }
 ]

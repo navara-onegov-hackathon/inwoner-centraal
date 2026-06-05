@@ -21,6 +21,14 @@ def load_process_registry() -> list[dict]:
     return _read_json('processes.json')
 
 
+def load_active_process_registry() -> list[dict]:
+    return [
+        process
+        for process in load_process_registry()
+        if not process.get('skip')
+    ]
+
+
 def _read_json(name: str):
     return json.loads((_CONFIG_DIR / name).read_text(encoding='utf-8'))
 

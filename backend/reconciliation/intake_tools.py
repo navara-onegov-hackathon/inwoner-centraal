@@ -4,13 +4,14 @@ from typing import Any
 
 from .a2a_client import call_a2a_agent as call_belastingdienst_agent
 from .api_tools import call_api, discover_api
-from .config_registry import load_process_registry
+from .config_registry import load_active_process_registry, load_process_registry
 
 
 @dataclass
 class IntakeAgentState:
     user_info: dict[str, Any] | None = None
     processes: list[dict[str, Any]] = field(default_factory=list)
+    irrelevant_processes: list[dict[str, Any]] = field(default_factory=list)
     progress: list[str] = field(default_factory=list)
     complete: bool = False
 
@@ -22,7 +23,11 @@ def build_openai_tools() -> list[dict[str, Any]]:
             'properties': {
                 'message': {
                     'type': 'string',
-                    'description': 'Concrete Dutch progress message, preferably naming the organisation or source being checked.',
+                    'description': (
+                        'Concrete Dutch progress message for citizens. Use neutral wording like '
+                        '"Controle bij RDW: voertuiggegevens ophalen." Do not mention AI, agents, tools, '
+                        'OpenAPI, or first-person wording such as "Ik controleer bij ...".'
+                    ),
                 },
             },
             'required': ['message'],
@@ -82,6 +87,11 @@ def build_openai_tools() -> list[dict[str, Any]]:
         }),
         _tool('set_user_info', 'Register the basic user and case information for the intake UI.', _user_info_schema()),
         _tool('register_process', 'Register one relevant process. Irrelevant processes must not be registered.', _process_schema()),
+        _tool(
+            'mark_process_irrelevant',
+            'Mark one configured process as checked and not relevant. Use this for every configured process that does not apply.',
+            _irrelevant_process_schema(),
+        ),
         _tool('complete_discovery', 'Mark discovery complete after user info and all relevant processes have been registered.', {
             'type': 'object',
             'properties': {
@@ -128,6 +138,13 @@ def dispatch_tool(name: str, arguments: dict[str, Any], state: IntakeAgentState)
         _validate_process_policy(arguments)
         _upsert_process(state, arguments)
         return {'ok': True, 'registered_process_id': arguments['id']}
+
+    if name == 'mark_process_irrelevant':
+        if state.user_info is None:
+            raise ValueError('set_user_info must be called before mark_process_irrelevant.')
+        _validate_irrelevant_process_id(arguments['id'])
+        _upsert_irrelevant_process(state, arguments)
+        return {'ok': True, 'irrelevant_process_id': arguments['id']}
 
     if name == 'complete_discovery':
         if state.user_info is None:
@@ -293,6 +310,34 @@ def _process_schema() -> dict[str, Any]:
     }
 
 
+def _irrelevant_process_schema() -> dict[str, Any]:
+    return {
+        'type': 'object',
+        'properties': {
+            'id': {'type': 'string', 'description': 'Configured process id that was checked.'},
+            'organisation': {'type': 'string'},
+            'title': {'type': 'string'},
+            'reason': {'type': 'string', 'description': 'Why this process is not relevant for this case.'},
+            'evidence': {
+                'type': 'array',
+                'items': {
+                    'type': 'object',
+                    'properties': {
+                        'source_type': {'type': 'string'},
+                        'source_name': {'type': 'string'},
+                        'reference': {'type': 'string'},
+                        'description': {'type': 'string'},
+                    },
+                    'required': ['source_type', 'source_name', 'reference'],
+                    'additionalProperties': True,
+                },
+            },
+        },
+        'required': ['id', 'organisation', 'title', 'reason'],
+        'additionalProperties': True,
+    }
+
+
 def _validate_deadline_xor_urgent(process: dict[str, Any]):
     if process.get('deadline') and process.get('urgent'):
         raise ValueError('A process may have deadline or urgent, but not both.')
@@ -304,6 +349,8 @@ def _validate_process_policy(process: dict[str, Any]):
     policy = _process_policy(process['id'])
     if not policy:
         return
+    if policy.get('skip'):
+        raise ValueError(f"Process {process['id']} is skipped for this demo run.")
     if (
         policy.get('requires_form_when_relevant')
         and process.get('state') == 'open'
@@ -328,9 +375,27 @@ def _process_policy(process_id: str) -> dict[str, Any] | None:
     return next((process for process in load_process_registry() if process['id'] == process_id), None)
 
 
+def _validate_irrelevant_process_id(process_id: str):
+    policy = _process_policy(process_id)
+    active_ids = {process['id'] for process in load_active_process_registry()}
+    if not policy:
+        raise ValueError(f'Unknown configured process id: {process_id}')
+    if process_id not in active_ids:
+        raise ValueError(f'Process {process_id} is skipped for this demo run.')
+    if policy.get('demo_always_relevant'):
+        raise ValueError(f'Process {process_id} is always relevant for this demo and must be registered.')
+
+
 def _upsert_process(state: IntakeAgentState, process: dict[str, Any]):
     state.processes = [existing for existing in state.processes if existing.get('id') != process['id']]
     state.processes.append(process)
+
+
+def _upsert_irrelevant_process(state: IntakeAgentState, process: dict[str, Any]):
+    state.irrelevant_processes = [
+        existing for existing in state.irrelevant_processes if existing.get('id') != process['id']
+    ]
+    state.irrelevant_processes.append(process)
 
 
 def _validate_ag_ui_form(process_id: str, form: dict[str, Any]):
