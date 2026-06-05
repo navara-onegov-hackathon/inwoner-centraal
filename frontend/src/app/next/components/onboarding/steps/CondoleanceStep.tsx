@@ -21,7 +21,7 @@ export function CondoleanceStep({ persona, onNext }: CondoleanceStepProps) {
         </h1>
         <div className="space-y-4 text-base leading-relaxed text-gray-700">
           <p>
-            {voornaam} is op {formatted} overleden. Regelwerk voelt extra zwaar aan in deze mooeilijke periode.
+            {voornaam} is op {formatted} overleden. Regelwerk voelt extra zwaar aan in deze moeilijke periode.
           </p>
           <p>
             Wij laten u zien wat de overheid regelt, en wat u nog moet doen. U hoeft niet alles in één keer te doen.
