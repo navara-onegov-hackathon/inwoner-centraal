@@ -42,7 +42,7 @@ def stream_intake_discovery(
     deceased_bsn: str,
     assistance: str,
 ):
-    state = IntakeAgentState()
+    state = IntakeAgentState(assistance=assistance)
     base_user_prompt = build_user_prompt(
         deceased_bsn=deceased_bsn,
         assistance=assistance,

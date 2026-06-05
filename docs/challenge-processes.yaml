@@ -67,6 +67,12 @@ processes:
   - id: cak-wlz-factuur-betalen
     organisation: CAK
     process: WLZ-factuur betalen
+    payment_button_required: true
+    note: >
+      Voor de demo heeft deze stap een zichtbare Betalen-knop nodig. Die knop
+      voert geen echte betaling uit. Als de stap relevant is, registreert de
+      agent handled_by you, action_type betalen en een ag-ui formulier met
+      submit_label Betalen.
     relevant_if:
       any:
         - "verplichtingen contains item where organisatie == 'CAK'"
@@ -82,6 +88,12 @@ processes:
   - id: cak-incasso-mislukt-oplossen
     organisation: CAK
     process: Mislukte incasso oplossen
+    payment_button_required: true
+    note: >
+      Voor de demo heeft deze stap een zichtbare Betalen-knop nodig. Die knop
+      voert geen echte betaling uit. Als de stap relevant is, registreert de
+      agent handled_by you, action_type betalen en een ag-ui formulier met
+      submit_label Betalen.
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'CAK.INCASSO-MISLUKT'"
@@ -110,6 +122,12 @@ processes:
   - id: toeslagen-zorg-terugvordering-afhandelen
     organisation: Toeslagen
     process: Terugvordering zorgtoeslag afhandelen
+    payment_button_required: true
+    note: >
+      Voor de demo heeft deze stap een zichtbare Betalen-knop nodig. Die knop
+      voert geen echte betaling uit. Als de stap relevant is, registreert de
+      agent handled_by you, action_type betalen en een ag-ui formulier met
+      submit_label Betalen.
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'TOESLAGEN.TERUGVORDERING-ZORG'"
@@ -155,6 +173,11 @@ processes:
   - id: toeslagen-late-naheffing-afhandelen
     organisation: Toeslagen
     process: Late naheffing of rekeningnummer-uitvraag afhandelen
+    payment_button_required: true
+    note: >
+      Als deze stap over betalen gaat, heeft de demo een zichtbare Betalen-knop
+      nodig. Die knop voert geen echte betaling uit. Registreer handled_by you,
+      action_type betalen en een ag-ui formulier met submit_label Betalen.
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'TOESLAGEN.NAHEFFING-LATE-ZORG'"
@@ -236,6 +259,11 @@ processes:
   - id: gemeente-lokale-belasting
     organisation: Gemeente
     process: Gemeentelijke belastingen betalen of bezwaar maken
+    payment_button_required: true
+    note: >
+      Als deze stap over betalen gaat, heeft de demo een zichtbare Betalen-knop
+      nodig. Die knop voert geen echte betaling uit. Registreer handled_by you,
+      action_type betalen en een ag-ui formulier met submit_label Betalen.
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'GEMEENTE.LOKALE-BELASTING'"
@@ -251,6 +279,12 @@ processes:
   - id: waterschap-aanslag
     organisation: Waterschap
     process: Waterschapsbelasting betalen
+    payment_button_required: true
+    note: >
+      Voor de demo heeft deze stap een zichtbare Betalen-knop nodig. Die knop
+      voert geen echte betaling uit. Als de stap relevant is, registreert de
+      agent handled_by you, action_type betalen en een ag-ui formulier met
+      submit_label Betalen.
     relevant_if:
       any:
         - "verplichtingen contains item where organisatie == 'Waterschap'"
@@ -267,12 +301,19 @@ processes:
     organisation: RDW
     process: Voertuig overschrijven of vrijwaring regelen
     note: >
-      Laat de gebruiker kiezen tussen overschrijven en vrijwaren. Ontdek de
-      benodigde invoer vanuit de RDW OpenAPI: voor tenaamstelling zijn onder
-      meer nieuw_houder_bsn en nieuw_houder_naam vereist; voor vrijwaren is
-      geen extra invoer nodig. Bepaal de rechtsgrond waar mogelijk vanuit de
-      context, meestal ERFRECHT bij overlijden, en vraag hier alleen naar als
-      dat echt niet afleidbaar is.
+      Laat de gebruiker kiezen tussen Vrijgeven en Overschrijven. Ontdek de
+      benodigde invoer vanuit de RDW OpenAPI. Voor de demo moet het gegenereerde
+      ag-ui formulier consistent zijn: gebruik één verplichte dropdown met field
+      name vehicle_action, optie Vrijgeven met value vrijwaren en optie
+      Overschrijven met value overschrijven. Als de gebruiker Overschrijven
+      kiest, toon twee extra verplichte tekstvelden en één verplichte dropdown:
+      new_owner_bsn met label BSN nieuwe eigenaar, new_owner_name met label Naam
+      nieuwe eigenaar en reason met label Reden. De reason-dropdown bevat Erven,
+      Verkopen en Schenken met values erven, verkopen en schenken. Het veld
+      reason moet standaard op erven staan. Voor vrijwaren is geen extra invoer
+      nodig. Bepaal de rechtsgrond waar mogelijk vanuit de context, meestal
+      ERFRECHT bij overlijden, en vraag hier alleen naar als dat echt niet
+      afleidbaar is.
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'RDW.S-1712'"
@@ -405,13 +446,20 @@ processes:
     organisation: Gemeente
     process: Akte van overlijden aanvragen
     challenge_backed: false
-    demo_default_applicability: not_applicable
+    demo_default_applicability: applicable
+    agent_handles_when_assistance_max: true
     relevant_if:
-      any: []
-    not_relevant_if:
       any:
-        - "Demo assumption: non challenge-backed process"
+        - "Demo assumption: always relevant for requesting an official death certificate"
+    not_relevant_if:
+      any: []
     evidence_from_discovery: []
+    notes: >
+      For this demo, this process is always relevant without an external
+      applicability check. When assistance is max, the system can request the
+      certificate without extra user input and the agent should register it with
+      handled_by us and state pending. When assistance is none or partial,
+      register it with handled_by you and state open.
 
   - id: notaris-verklaring-van-erfrecht
     organisation: Notaris
@@ -429,13 +477,20 @@ processes:
     organisation: Diverse
     process: Geadresseerde reclamepost stopzetten
     challenge_backed: false
-    demo_default_applicability: not_applicable
+    demo_default_applicability: applicable
+    agent_handles_when_assistance_max: true
     relevant_if:
-      any: []
-    not_relevant_if:
       any:
-        - "Demo assumption: non challenge-backed process"
+        - "Demo assumption: always relevant for stopping addressed advertising mail"
+    not_relevant_if:
+      any: []
     evidence_from_discovery: []
+    notes: >
+      For this demo, this process is always relevant without an external
+      applicability check. When assistance is max, the system can stop addressed
+      advertising mail without extra user input and the agent should register it
+      with handled_by us and state pending. When assistance is none or partial,
+      register it with handled_by you and state open.
 
   - id: contracten-abonnementen-opzeggen
     organisation: Diverse

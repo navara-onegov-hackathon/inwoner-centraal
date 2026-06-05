@@ -9,6 +9,7 @@ from .config_registry import load_active_process_registry, load_process_registry
 
 @dataclass
 class IntakeAgentState:
+    assistance: str = 'max'
     user_info: dict[str, Any] | None = None
     processes: list[dict[str, Any]] = field(default_factory=list)
     irrelevant_processes: list[dict[str, Any]] = field(default_factory=list)
@@ -135,7 +136,7 @@ def dispatch_tool(name: str, arguments: dict[str, Any], state: IntakeAgentState)
         if state.user_info is None:
             raise ValueError('set_user_info must be called before register_process.')
         _validate_deadline_xor_urgent(arguments)
-        _validate_process_policy(arguments)
+        _validate_process_policy(arguments, state)
         _upsert_process(state, arguments)
         return {'ok': True, 'registered_process_id': arguments['id']}
 
@@ -343,7 +344,7 @@ def _validate_deadline_xor_urgent(process: dict[str, Any]):
         raise ValueError('A process may have deadline or urgent, but not both.')
 
 
-def _validate_process_policy(process: dict[str, Any]):
+def _validate_process_policy(process: dict[str, Any], state: IntakeAgentState):
     if process.get('state') == 'done':
         raise ValueError(
             f"Process {process['id']} may not be done during intake discovery. "
@@ -357,15 +358,24 @@ def _validate_process_policy(process: dict[str, Any]):
         )
     if process.get('amount') and process.get('handled_by') != 'you':
         raise ValueError(
-            f"Payment process {process['id']} must be handled_by you."
+            f"Step {process['id']} has an amount and must be handled_by you."
         )
     if process.get('form'):
         _validate_ag_ui_form(process['id'], process['form'])
     policy = _process_policy(process['id'])
     if not policy:
         return
+    if policy.get('form_contract') and process.get('form'):
+        _validate_form_contract(process['id'], process['form'], policy['form_contract'])
     if policy.get('skip'):
         raise ValueError(f"Process {process['id']} is skipped for this demo run.")
+    if policy.get('agent_handles_when_assistance_max') and state.assistance == 'max':
+        if process.get('handled_by') != 'us' or process.get('state') != 'pending':
+            raise ValueError(
+                f"Process {process['id']} must be handled_by us with state pending when assistance is max."
+            )
+    if _is_payment_button_required(process, policy):
+        _validate_payment_button_required(process)
     if (
         policy.get('requires_form_when_relevant')
         and process.get('state') == 'open'
@@ -388,6 +398,27 @@ def _validate_process_policy(process: dict[str, Any]):
 
 def _process_policy(process_id: str) -> dict[str, Any] | None:
     return next((process for process in load_process_registry() if process['id'] == process_id), None)
+
+
+def _is_payment_button_required(process: dict[str, Any], policy: dict[str, Any]) -> bool:
+    return bool(
+        policy.get('payment_button_required')
+        or process.get('amount')
+        or process.get('action_type') == 'betalen'
+    )
+
+
+def _validate_payment_button_required(process: dict[str, Any]):
+    if process.get('handled_by') != 'you':
+        raise ValueError(f"Step {process['id']} with a Betalen button must be handled_by you.")
+    if process.get('action_type') != 'betalen':
+        raise ValueError(f"Step {process['id']} with a Betalen button must use action_type betalen.")
+    if process.get('state') == 'open':
+        form = process.get('form')
+        if not form:
+            raise ValueError(f"Step {process['id']} requires an ag-ui form for the demo Betalen button.")
+        if form.get('submit_label') != 'Betalen':
+            raise ValueError(f"Form for {process['id']} must use submit_label Betalen.")
 
 
 def _validate_irrelevant_process_id(process_id: str):
@@ -423,3 +454,82 @@ def _validate_ag_ui_form(process_id: str, form: dict[str, Any]):
         for required in ['name', 'label', 'type', 'required']:
             if required not in field:
                 raise ValueError(f"Form field for {process_id} misses {required}.")
+
+
+def _validate_form_contract(process_id: str, form: dict[str, Any], contract: dict[str, Any]):
+    fields = form.get('fields') or []
+    fields_by_name = {field.get('name'): field for field in fields}
+    choice = contract.get('choice_field') or {}
+    conditional_fields = contract.get('conditional_fields') or []
+    expected_names = {choice.get('name'), *(field.get('name') for field in conditional_fields)}
+    actual_names = set(fields_by_name)
+
+    if actual_names != expected_names:
+        raise ValueError(
+            f"Form for {process_id} must contain exactly these fields: {', '.join(sorted(expected_names))}."
+        )
+
+    choice_field = fields_by_name.get(choice.get('name'))
+    if not choice_field:
+        raise ValueError(f"Form for {process_id} misses choice field {choice.get('name')}.")
+    if choice_field.get('type') != choice.get('type') or choice_field.get('required') is not True:
+        raise ValueError(
+            f"Choice field {choice.get('name')} for {process_id} must be a required {choice.get('type')} field."
+        )
+
+    actual_options = {
+        option.get('value'): option.get('label')
+        for option in choice_field.get('options') or []
+    }
+    expected_options = {
+        option.get('value'): option.get('label')
+        for option in choice.get('options') or []
+    }
+    if actual_options != expected_options:
+        raise ValueError(
+            f"Choice field {choice.get('name')} for {process_id} must use the configured option labels and values."
+        )
+
+    for expected in conditional_fields:
+        field = fields_by_name.get(expected.get('name'))
+        if not field:
+            raise ValueError(f"Form for {process_id} misses conditional field {expected.get('name')}.")
+        if field.get('type') != expected.get('type') or field.get('required') is not True:
+            raise ValueError(
+                f"Conditional field {expected.get('name')} for {process_id} must be a required {expected.get('type')} field."
+            )
+        if expected.get('label') and field.get('label') != expected.get('label'):
+            raise ValueError(
+                f"Conditional field {expected.get('name')} for {process_id} must use label {expected.get('label')}."
+            )
+        if expected.get('options') is not None:
+            actual_options = {
+                option.get('value'): option.get('label')
+                for option in field.get('options') or []
+            }
+            expected_options = {
+                option.get('value'): option.get('label')
+                for option in expected.get('options') or []
+            }
+            if actual_options != expected_options:
+                raise ValueError(
+                    f"Conditional field {expected.get('name')} for {process_id} must use the configured option labels and values."
+                )
+        if field.get('show_when') != expected.get('show_when'):
+            raise ValueError(
+                f"Conditional field {expected.get('name')} for {process_id} must use the configured show_when condition."
+            )
+        if expected.get('prefill') is not None and not _field_has_default(form, field, expected):
+            raise ValueError(
+                f"Conditional field {expected.get('name')} for {process_id} must default to {expected.get('prefill')}."
+            )
+
+
+def _field_has_default(form: dict[str, Any], field: dict[str, Any], expected: dict[str, Any]) -> bool:
+    expected_value = str(expected.get('prefill')).lower()
+    prefill = field.get('prefill')
+    if isinstance(prefill, str) and prefill.lower() == expected_value:
+        return True
+    defaults = ((form.get('meta') or {}).get('defaults') or {})
+    default_value = defaults.get(field.get('name'))
+    return isinstance(default_value, str) and default_value.lower() == expected_value

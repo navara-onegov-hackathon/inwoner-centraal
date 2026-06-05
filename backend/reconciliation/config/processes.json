@@ -33,14 +33,16 @@
     "organisation": "CAK",
     "title": "WLZ-factuur betalen",
     "category": "fixed",
-    "notes": "Relevant when CAK data shows an outstanding WLZ invoice or related correspondence."
+    "payment_button_required": true,
+    "notes": "Relevant when CAK data shows an outstanding WLZ invoice or related correspondence. For the demo this step needs a visible Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen."
   },
   {
     "id": "cak-incasso-mislukt-oplossen",
     "organisation": "CAK",
     "title": "Mislukte incasso oplossen",
     "category": "fixed",
-    "notes": "Relevant when CAK data shows a failed direct debit or unresolved payment issue."
+    "payment_button_required": true,
+    "notes": "Relevant when CAK data shows a failed direct debit or unresolved payment issue. For the demo this step needs a visible Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen."
   },
   {
     "id": "toeslagen-zorg-herziening-beoordelen",
@@ -56,7 +58,8 @@
     "organisation": "Toeslagen",
     "title": "Terugvordering zorgtoeslag afhandelen",
     "category": "fixed",
-    "notes": "Relevant when discovered data shows a healthcare allowance repayment or recovery.",
+    "payment_button_required": true,
+    "notes": "Relevant when discovered data shows a healthcare allowance repayment or recovery. For the demo this step needs a visible Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen.",
     "skip": true,
     "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
@@ -83,7 +86,8 @@
     "organisation": "Toeslagen",
     "title": "Late naheffing of rekeningnummer-uitvraag afhandelen",
     "category": "fixed",
-    "notes": "Relevant when discovered data shows a late assessment, repayment, or bank account request.",
+    "payment_button_required": true,
+    "notes": "Relevant when discovered data shows a late assessment, repayment, or bank account request. If the relevant step is about paying, show a Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen.",
     "skip": true,
     "skip_reason": "Skipped in the demo to keep active process coverage focused."
   },
@@ -132,14 +136,16 @@
     "title": "Gemeentelijke belastingen betalen of bezwaar maken",
     "category": "fixed",
     "always_include": true,
-    "notes": "Gemeente may not expose an API yet. Include if peildatum or local tax obligations plausibly apply."
+    "payment_button_required": true,
+    "notes": "Gemeente may not expose an API yet. Include if peildatum or local tax obligations plausibly apply. If the relevant step is about paying municipal taxes, show a Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen."
   },
   {
     "id": "waterschap-aanslag",
     "organisation": "Waterschap",
     "title": "Waterschapsbelasting betalen",
     "category": "fixed",
-    "notes": "Relevant when obligations or correspondence show a water authority assessment."
+    "payment_button_required": true,
+    "notes": "Relevant when obligations or correspondence show a water authority assessment. For the demo this step needs a visible Betalen button only; the button does not execute a real payment. Register it with handled_by you, action_type betalen, and an ag-ui form whose submit_label is Betalen."
   },
   {
     "id": "rdw-overschrijven",
@@ -147,7 +153,67 @@
     "title": "Voertuig overschrijven of vrijwaring regelen",
     "category": "fixed",
     "requires_form_when_relevant": true,
-    "notes": "Use RDW OpenAPI to discover both transfer and vrijwaren operations. Offer the user a choice between overschrijven and vrijwaren when both are available. Infer legal basis such as ERFRECHT when the context supports it; do not ask for data that can be inferred. Ask only for unavailable information or choices that cannot be determined automatically. Generate the ag-ui form from discovered API request schemas and process context."
+    "form_contract": {
+      "choice_field": {
+        "name": "vehicle_action",
+        "type": "select",
+        "options": [
+          {
+            "label": "Vrijgeven",
+            "value": "vrijwaren"
+          },
+          {
+            "label": "Overschrijven",
+            "value": "overschrijven"
+          }
+        ]
+      },
+      "conditional_fields": [
+        {
+          "name": "new_owner_bsn",
+          "label": "BSN nieuwe eigenaar",
+          "type": "text",
+          "show_when": {
+            "field": "vehicle_action",
+            "equals": "overschrijven"
+          }
+        },
+        {
+          "name": "new_owner_name",
+          "label": "Naam nieuwe eigenaar",
+          "type": "text",
+          "show_when": {
+            "field": "vehicle_action",
+            "equals": "overschrijven"
+          }
+        },
+        {
+          "name": "reason",
+          "label": "Reden",
+          "type": "select",
+          "prefill": "erven",
+          "options": [
+            {
+              "label": "Erven",
+              "value": "erven"
+            },
+            {
+              "label": "Verkopen",
+              "value": "verkopen"
+            },
+            {
+              "label": "Schenken",
+              "value": "schenken"
+            }
+          ],
+          "show_when": {
+            "field": "vehicle_action",
+            "equals": "overschrijven"
+          }
+        }
+      ]
+    },
+    "notes": "Use RDW OpenAPI to discover both transfer and vrijwaren operations. For the demo, the generated ag-ui form must be consistent: one required dropdown where the user chooses Vrijgeven or Overschrijven. Use field name vehicle_action with option value vrijwaren for Vrijgeven and option value overschrijven for Overschrijven. When the user chooses Overschrijven, show exactly three additional required fields: new_owner_bsn as text labelled BSN nieuwe eigenaar, new_owner_name as text labelled Naam nieuwe eigenaar, and reason as select labelled Reden. The reason dropdown must offer Erven, Verkopen and Schenken with values erven, verkopen and schenken, and must default to erven. Infer legal basis such as ERFRECHT when the context supports it; do not ask for data that can be inferred outside this required user choice."
   },
   {
     "id": "rdw-beeindiging-tenaamstelling-volgen",
@@ -229,7 +295,8 @@
     "title": "Akte van overlijden aanvragen",
     "category": "non_challenge",
     "demo_default_applicability": "applicable",
-    "notes": "For this demo, this process is always relevant without an external applicability check.",
+    "notes": "For this demo, this process is always relevant without an external applicability check. When assistance is max, the system can request the certificate without extra user input; register it with handled_by us and state pending. When assistance is none or partial, register it with handled_by you and state open.",
+    "agent_handles_when_assistance_max": true,
     "demo_always_relevant": true
   },
   {
@@ -246,7 +313,8 @@
     "title": "Geadresseerde reclamepost stopzetten",
     "category": "non_challenge",
     "demo_default_applicability": "applicable",
-    "notes": "For this demo, this process is always relevant without an external applicability check.",
+    "notes": "For this demo, this process is always relevant without an external applicability check. When assistance is max, the system can stop addressed advertising mail without extra user input; register it with handled_by us and state pending. When assistance is none or partial, register it with handled_by you and state open.",
+    "agent_handles_when_assistance_max": true,
     "demo_always_relevant": true
   },
   {

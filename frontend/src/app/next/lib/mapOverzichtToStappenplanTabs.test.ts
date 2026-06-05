@@ -13,11 +13,11 @@ describe('mapOverzichtToStappenplanTabs', () => {
   const overzicht = deriveOverzicht(fixture as TruusCeesFixture, DEMO_TODAY);
   const board = partitionOverzicht(overzicht, DEFAULT_BEGELEIDING);
 
-  it('splits open user tasks into urgent and in behandeling', () => {
+  it('splits open user tasks into urgent and nog te doen', () => {
     const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false, DEMO_TODAY);
-    expect(tabs.urgent.length + tabs['in-behandeling'].length).toBe(board.actie_van_u.length);
+    expect(tabs.urgent.length + tabs['nog-te-doen'].length).toBe(board.actie_van_u.length);
     expect(tabs.urgent.every((r) => r.urgent)).toBe(true);
-    expect(tabs['in-behandeling'].every((r) => !r.urgent)).toBe(true);
+    expect(tabs['nog-te-doen'].every((r) => !r.urgent)).toBe(true);
   });
 
   it('combines delegated tasks and geregeld rows in wat-doen-wij', () => {
@@ -42,7 +42,7 @@ describe('mapOverzichtToStappenplanTabs', () => {
   it('buildStappenplanProgress reflects completed vs open steps', () => {
     const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false, DEMO_TODAY);
     const progress = buildStappenplanProgress(tabs);
-    const openCount = tabs.urgent.length + tabs['in-behandeling'].length;
+    const openCount = tabs.urgent.length + tabs['nog-te-doen'].length;
 
     expect(progress.totalCount).toBe(openCount + tabs.gedaan.length);
     expect(progress.completedCount).toBe(tabs.gedaan.length);

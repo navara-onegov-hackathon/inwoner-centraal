@@ -47,7 +47,9 @@ export function StappenplanRow({
     ? 'Gedaan'
     : taak?.state === 'blocked'
       ? 'Nog niet beschikbaar'
-      : 'In behandeling';
+      : taak?.handled_by === 'us'
+        ? 'In behandeling'
+        : 'Nog te doen';
 
   return (
     <div

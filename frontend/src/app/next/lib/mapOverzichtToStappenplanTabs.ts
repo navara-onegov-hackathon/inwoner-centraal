@@ -1,6 +1,6 @@
 import type { OverzichtResponse, StatusBoard, Taak } from '../types/overzicht';
 
-export type StappenplanTabId = 'urgent' | 'in-behandeling' | 'gedaan' | 'wat-doen-wij';
+export type StappenplanTabId = 'urgent' | 'nog-te-doen' | 'gedaan' | 'wat-doen-wij';
 export type StappenplanRowKind = 'taak' | 'agent' | 'regeling' | 'verwacht' | 'geen_actie';
 
 export const URGENT_DAYS = 14;
@@ -68,22 +68,22 @@ function taakRow(taak: Taak, referenceDate: string): StappenplanRow {
 function partitionOpenTasks(
   taken: Taak[],
   referenceDate: string,
-): { urgent: StappenplanRow[]; inBehandeling: StappenplanRow[] } {
+): { urgent: StappenplanRow[]; nogTeDoen: StappenplanRow[] } {
   const urgent: StappenplanRow[] = [];
-  const inBehandeling: StappenplanRow[] = [];
+  const nogTeDoen: StappenplanRow[] = [];
 
   for (const taak of taken) {
     const row = taakRow(taak, referenceDate);
     if (row.urgent) {
       urgent.push(row);
     } else {
-      inBehandeling.push(row);
+      nogTeDoen.push(row);
     }
   }
 
   return {
     urgent: sortByDueDateFirst(urgent),
-    inBehandeling: sortByDueDateFirst(inBehandeling),
+    nogTeDoen: sortByDueDateFirst(nogTeDoen),
   };
 }
 
@@ -93,7 +93,7 @@ export function mapOverzichtToStappenplanTabs(
   isUitgebreid: boolean,
   referenceDate: string,
 ): StappenplanTabRows {
-  const { urgent, inBehandeling } = partitionOpenTasks(board.actie_van_u, referenceDate);
+  const { urgent, nogTeDoen } = partitionOpenTasks(board.actie_van_u, referenceDate);
 
   const watDoenWij: StappenplanRow[] = [
     ...sortByDueDateFirst(board.geregeld_door_ons.taken.map((taak) => taakRow(taak, referenceDate))),
@@ -146,7 +146,7 @@ export function mapOverzichtToStappenplanTabs(
 
   return {
     urgent,
-    'in-behandeling': inBehandeling,
+    'nog-te-doen': nogTeDoen,
     'wat-doen-wij': watDoenWij,
     gedaan,
   };
@@ -166,7 +166,7 @@ export interface StappenplanProgress {
 }
 
 export function buildStappenplanProgress(tabs: StappenplanTabRows): StappenplanProgress {
-  const openByYou = tabs.urgent.length + tabs['in-behandeling'].length;
+  const openByYou = tabs.urgent.length + tabs['nog-te-doen'].length;
   const completedCount = tabs.gedaan.length;
   const totalCount = Math.max(openByYou + completedCount, 1);
   const percentage = Math.round((completedCount / totalCount) * 100);

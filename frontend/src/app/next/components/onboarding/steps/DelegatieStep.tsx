@@ -99,9 +99,9 @@ export function DelegatieStep({ onSelfContinue, onDelegate, onBack }: DelegatieS
             <div className="flex items-start gap-3">
               <User className="mt-0.5 h-5 w-5 shrink-0 text-[#007AC8]" aria-hidden />
               <div>
-                <p className="font-bold text-gray-900">Ik regel het zelf verder</p>
+                <p className="font-bold text-gray-900">Ik regel het zelf</p>
                 <p className="mt-1 text-sm text-gray-600">
-                  U doorloopt de stappen en ziet daarna uw persoonlijke overzicht.
+                  U heeft de regie en behoudt het overzicht.
                 </p>
               </div>
             </div>
