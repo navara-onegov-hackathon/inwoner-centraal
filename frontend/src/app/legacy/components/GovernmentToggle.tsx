@@ -13,7 +13,7 @@ export function GovernmentToggle({ checked, onChange, id }: GovernmentToggleProp
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-7 w-[4.5rem] shrink-0 items-center rounded-full transition-colors duration-200 ${
-        checked ? 'bg-[#3d8b40]' : 'bg-[#c04a3a]'
+        checked ? 'bg-[#007AC8]' : 'bg-gray-400'
       }`}
     >
       <span

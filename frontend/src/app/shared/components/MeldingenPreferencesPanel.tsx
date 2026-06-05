@@ -49,32 +49,20 @@ export function MeldingenPreferencesPanel({
       )}
 
       <section className={showGovernmentSection ? 'border-t border-gray-100 pt-6' : undefined}>
-        <h2 className="mb-2 text-base font-bold text-gray-900">Meldingen ontvangen</h2>
-        <p className="mb-4 text-sm text-gray-600">
-          U kiest zelf welke meldingen u ontvangt. Zet een schakelaar op AAN om meldingen te
-          ontvangen, of op UIT om ze uit te zetten.
-        </p>
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <GovernmentToggle
               checked={voorkeur.emailSteps}
               onChange={() => toggle('emailSteps')}
             />
-            <span className="text-sm">E-mails bij belangrijke stappen of herinneringen</span>
+            <span className="text-sm">Een e-mail als u iets moet doen</span>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <GovernmentToggle
               checked={voorkeur.emailNotifications}
               onChange={() => toggle('emailNotifications')}
             />
-            <span className="text-sm">E-mailnotificaties over uw situatie</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <GovernmentToggle
-              checked={voorkeur.inAppNotifications}
-              onChange={() => toggle('inAppNotifications')}
-            />
-            <span className="text-sm">Notificaties in MijnOverheid</span>
+            <span className="text-sm">Een e-mail met nieuws over uw situatie</span>
           </div>
         </div>
       </section>
