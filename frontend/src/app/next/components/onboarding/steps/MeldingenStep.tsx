@@ -12,13 +12,17 @@ export function MeldingenStep({ voorkeur, onChange, onNext, onBack }: MeldingenS
   return (
     <>
       <div className="flex-1">
-        <h1 className="mb-2 text-2xl font-bold text-gray-900">Welke meldingen wilt u ontvangen?</h1>
+        <h1 className="mb-2 text-2xl font-bold text-gray-900">Hoe wilt u bericht krijgen?</h1>
         <p className="mb-6 text-sm leading-relaxed text-gray-600">
-          Kies hoe wij u op de hoogte houden. U kunt dit later altijd wijzigen via Instellingen.
+          Kies hoe wij u laten weten wat er moet gebeuren. U kunt dit later altijd aanpassen.
         </p>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <MeldingenPreferencesPanel voorkeur={voorkeur} onChange={onChange} />
+        <div>
+          <MeldingenPreferencesPanel
+            voorkeur={voorkeur}
+            onChange={onChange}
+            showGovernmentSection={false}
+          />
         </div>
       </div>
 
