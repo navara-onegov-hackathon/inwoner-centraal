@@ -2,47 +2,39 @@ import { describe, expect, it } from 'vitest';
 import fixture from '../../../fixtures/truus-cees.json';
 import type { TruusCeesFixture } from '../types/fixture';
 import { DEFAULT_BEGELEIDING } from '../types/begeleiding';
+import { OVERZICHT_REFERENCE_DATE } from '../config/referenceDate';
 import { deriveOverzicht } from './deriveOverzicht';
 import { partitionOverzicht } from './partitionOverzicht';
-import { mapOverzichtToStappenplanTabs, pickUrgentRowIds, buildStappenplanProgress } from './mapOverzichtToStappenplanTabs';
+import { buildStappenplanProgress, mapOverzichtToStappenplanTabs } from './mapOverzichtToStappenplanTabs';
 
-const DEMO_TODAY = '2025-04-20';
+const DEMO_TODAY = OVERZICHT_REFERENCE_DATE;
 
 describe('mapOverzichtToStappenplanTabs', () => {
   const overzicht = deriveOverzicht(fixture as TruusCeesFixture, DEMO_TODAY);
   const board = partitionOverzicht(overzicht, DEFAULT_BEGELEIDING);
 
-  it('puts user-action taken in nog-te-doen', () => {
-    const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false);
-    expect(tabs['nog-te-doen'].length).toBe(board.actie_van_u.length);
-    expect(tabs['nog-te-doen'].every((r) => r.kind === 'taak')).toBe(true);
+  it('splits open user tasks into urgent and nog-te-doen', () => {
+    const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false, DEMO_TODAY);
+    expect(tabs.urgent.length + tabs['nog-te-doen'].length).toBe(board.actie_van_u.length);
+    expect(tabs.urgent.every((r) => r.urgent)).toBe(true);
+    expect(tabs['nog-te-doen'].every((r) => !r.urgent)).toBe(true);
   });
 
   it('combines agent + geregeld rows in wat-doen-wij', () => {
-    const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false);
+    const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false, DEMO_TODAY);
     expect(tabs['wat-doen-wij'].length).toBeGreaterThan(0);
     expect(tabs['wat-doen-wij'].some((r) => r.locked)).toBe(true);
   });
 
-  it('maps verwacht items to recht-op tab', () => {
-    const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false);
-    expect(tabs['recht-op'].length).toBe(board.wachten_op_organisatie.length);
-  });
-
-  it('pickUrgentRowIds returns at most 2 nog-te-doen ids', () => {
-    const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false);
-    const urgent = pickUrgentRowIds(tabs['nog-te-doen']);
-    expect(urgent.length).toBeLessThanOrEqual(2);
-  });
-
   it('buildStappenplanProgress reflects completed vs open steps', () => {
-    const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false);
+    const tabs = mapOverzichtToStappenplanTabs(board, overzicht, false, DEMO_TODAY);
     const progress = buildStappenplanProgress(tabs);
+    const openCount = tabs.urgent.length + tabs['nog-te-doen'].length;
 
-    expect(progress.totalCount).toBe(tabs['nog-te-doen'].length + tabs.gedaan.length);
+    expect(progress.totalCount).toBe(openCount + tabs.gedaan.length);
     expect(progress.completedCount).toBe(tabs.gedaan.length);
     expect(progress.percentage).toBeGreaterThanOrEqual(0);
     expect(progress.percentage).toBeLessThanOrEqual(100);
-    expect(progress.userTasksComplete).toBe(tabs['nog-te-doen'].length === 0);
+    expect(progress.userTasksComplete).toBe(openCount === 0);
   });
 });

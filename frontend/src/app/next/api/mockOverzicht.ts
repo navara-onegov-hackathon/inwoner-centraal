@@ -3,7 +3,9 @@ import type { TruusCeesFixture } from '../types/fixture';
 import type { OverzichtResponse } from '../types/overzicht';
 import { deriveOverzicht } from '../lib/deriveOverzicht';
 
-const DEMO_TODAY = '2025-04-20';
+import { OVERZICHT_REFERENCE_DATE } from '../config/referenceDate';
+
+const DEMO_TODAY = OVERZICHT_REFERENCE_DATE;
 
 export function mockOverzicht(): OverzichtResponse {
   return deriveOverzicht(fixture as TruusCeesFixture, DEMO_TODAY);
