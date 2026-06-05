@@ -1,4 +1,4 @@
-import { CheckCircle2, CircleDashed } from 'lucide-react';
+import { CircleDashed } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { startIntakeDiscovery } from '../../../api/intakeDiscovery';
 import type { BegeleidingsVoorkeur } from '../../../types/begeleiding';
@@ -28,7 +28,7 @@ export function AgentPlanStep({
   const [lines, setLines] = useState<LogLine[]>(() =>
     initialResult
       ? [{ id: 'complete', text: 'Gegevens zijn al verzameld voor deze sessie.', status: 'done' }]
-      : [{ id: 'start', text: 'Verbinding maken met de intake agent', status: 'pending' }],
+      : [{ id: 'start', text: 'Gegevenscontrole voorbereiden', status: 'pending' }],
   );
   const [resultReady, setResultReady] = useState(Boolean(initialResult));
   const [error, setError] = useState<string | null>(null);
@@ -66,27 +66,22 @@ export function AgentPlanStep({
         </p>
 
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
-              Discovery log
-            </h2>
-            <span className="text-xs text-gray-500">
-              {resultReady ? 'Afgerond' : 'Bezig'}
-            </span>
-          </div>
-
-          <div className="space-y-3">
+          <div className="space-y-2">
             {lines.map((line, index) => {
               const isCurrentPending = line.status === 'pending' && index === lines.length - 1 && !resultReady;
               return (
                 <div
                   key={line.id}
-                  className="flex items-start gap-3 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-800"
+                  className={`flex items-start gap-3 text-sm ${
+                    isCurrentPending ? 'text-[#007AC8]' : 'text-gray-700'
+                  }`}
                 >
                   {isCurrentPending ? (
                     <CircleDashed className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-[#007AC8]" />
                   ) : (
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                    <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center text-current">
+                      ✓
+                    </span>
                   )}
                   <span>{line.text}</span>
                 </div>

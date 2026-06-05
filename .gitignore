@@ -43,6 +43,7 @@ htmlcov/
 
 # Cursor / AI agent (local session artefacts; keep shared project config)
 .cursor
+.playwright-mcp
 
 # Agent-generated documentation
 CONTEXT.md
