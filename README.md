@@ -129,3 +129,7 @@ Without `GREENPT_API_KEY`, the backend keeps running and falls back where possib
 - [`docs/challenge-processes.yaml`](docs/challenge-processes.yaml) - challenge process inventory
 - [`DEVELOPMENT.md`](DEVELOPMENT.md) - manual local development setup
 - Challenge source material: [`govtechnl/onegov2-inwoner-centraal`](https://github.com/govtechnl/onegov2-inwoner-centraal)
+
+## Acknowledgment
+
+The UI is based on the [ID-Wallets "Levensgebeurtenissen" demo](https://id-wallets.nl/demos/levensgebeurtenissen/#c30499) by the ID-Wallets project. That demo shows a redesigned MijnOverheid experience for life events, including a bereavement scenario where a next-of-kin handles post-death administration — such as stopping mail, notifying the bank, and transferring a vehicle registration — using an ID-wallet to share verified documents quickly and selectively. The visual design and interaction patterns of that prototype informed the UI of this project.
