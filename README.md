@@ -268,16 +268,9 @@ Then open:
 - CAK mock API: http://localhost:8001/docs
 - RDW mock API: http://localhost:8002/docs
 - SVB mock API: http://localhost:8003/docs
+- Belastingdienst A2A agent: http://localhost:9999
 
 The backend reads the local `.env` through Docker Compose at runtime for AI settings such as `GREENPT_API_KEY` when the file exists. The `.env` file is not copied into any image. Without `GREENPT_API_KEY`, the backend falls back to local discrepancy analysis.
-
-The Belastingdienst A2A agent is optional and can be started with:
-
-```bash
-docker compose --profile agents up --build
-```
-
-It is available at http://localhost:9999 when the `agents` profile is enabled.
 
 As the prototype evolves, we expect to add:
 

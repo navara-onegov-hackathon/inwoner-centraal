@@ -58,8 +58,6 @@ services:
       - "8003:8003"
 
   a2a:
-    profiles:
-      - agents
     build:
       context: ./a2a
     env_file:
