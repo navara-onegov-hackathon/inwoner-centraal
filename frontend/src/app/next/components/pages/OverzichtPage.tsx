@@ -67,7 +67,6 @@ export function OverzichtPage({ voorkeur, onNavigate }: OverzichtPageProps) {
       <StappenplanOverzichtPanel
         partitioned={partitioned}
         isUitgebreid={isUitgebreid}
-        voorkeur={voorkeur}
         onOverzichtChange={setData}
       />
     </div>
