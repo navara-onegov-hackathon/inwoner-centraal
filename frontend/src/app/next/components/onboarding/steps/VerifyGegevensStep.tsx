@@ -1,5 +1,4 @@
 import type { GegevensProfiel } from '../../../types/begeleiding';
-import { formatAdres } from '../../../types/begeleiding';
 import {
   AdresGegevensCard,
   IbanGegevensCard,
@@ -41,10 +40,6 @@ export function VerifyGegevensStep({
           />
           <IbanGegevensCard value={gegevens.iban} onChange={(iban) => patch({ iban })} />
         </div>
-
-        <p className="mt-4 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-600">
-          Volledig adres: {formatAdres(gegevens.adres)}
-        </p>
       </div>
 
       <div className="mt-8 flex gap-3">
