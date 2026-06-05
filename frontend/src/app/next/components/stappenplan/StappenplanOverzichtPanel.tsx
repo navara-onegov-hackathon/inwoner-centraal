@@ -141,6 +141,7 @@ export function StappenplanOverzichtPanel({
             <StappenplanRow
               key={row.id}
               row={row}
+              activeTab={activeTab}
               overzicht={partitioned}
               isUitgebreid={isUitgebreid}
               onOverzichtChange={onOverzichtChange}
