@@ -128,4 +128,4 @@ Without `GREENPT_API_KEY`, the backend keeps running and falls back where possib
 - [`docs/intake-discovery-design.md`](docs/intake-discovery-design.md) - agent-driven intake design
 - [`docs/challenge-processes.yaml`](docs/challenge-processes.yaml) - challenge process inventory
 - [`DEVELOPMENT.md`](DEVELOPMENT.md) - manual local development setup
-- Challenge source material: [`../onegov2-inwoner-centraal`](../onegov2-inwoner-centraal)
+- Challenge source material: [`govtechnl/onegov2-inwoner-centraal`](https://github.com/govtechnl/onegov2-inwoner-centraal)
