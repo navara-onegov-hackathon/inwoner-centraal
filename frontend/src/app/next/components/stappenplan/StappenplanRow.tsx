@@ -158,7 +158,7 @@ function TaakExpandedDetail({
             className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-md border border-green-700 bg-white px-5 py-2 text-sm font-semibold text-green-700 hover:bg-green-50"
           >
             <CheckCircle2 className="h-4 w-4" aria-hidden />
-            Ik heb deze taak al afgerond
+            Ik heb deze taak afgerond
           </button>
         )}
       </div>
