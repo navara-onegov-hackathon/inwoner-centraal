@@ -57,7 +57,7 @@ export function BegeleidingStep({ voorkeur, onChange, onNext, onBack }: Begeleid
   return (
     <>
       <div className="flex-1">
-        <h1 className="mb-2 text-2xl font-bold text-gray-900">Hoeveel mag wij voor u doen?</h1>
+        <h1 className="mb-2 text-2xl font-bold text-gray-900">Hoeveel mogen wij voor u doen?</h1>
         <p className="mb-6 text-sm text-gray-600">
           U kunt dit later altijd wijzigen via <strong>Instellingen</strong> in het menu.
         </p>
