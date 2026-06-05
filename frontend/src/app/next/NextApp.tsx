@@ -59,7 +59,7 @@ export function NextApp() {
       case 'berichtenbox':
         return <BerichtenboxPage onNavigate={setActiveSection} />;
       case 'brieven':
-        return <BrievenPage onBackToStappenplan={() => setActiveSection('stappenplan')} />;
+        return <BrievenPage onBackToOverzicht={() => setActiveSection('stappenplan')} />;
       case 'stappenplan':
         return <OverzichtPage voorkeur={voorkeur} onNavigate={setActiveSection} />;
       case 'uitleg':

@@ -19,7 +19,7 @@ import {
 import { useOverzicht } from '../../hooks/useOverzicht';
 
 interface BrievenPageProps {
-  onBackToStappenplan: () => void;
+  onBackToOverzicht: () => void;
 }
 
 const tabs: { id: BrievenTabId; label: string }[] = [
@@ -27,7 +27,7 @@ const tabs: { id: BrievenTabId; label: string }[] = [
   { id: 'verwacht', label: 'Verwacht' },
 ];
 
-export function BrievenPage({ onBackToStappenplan }: BrievenPageProps) {
+export function BrievenPage({ onBackToOverzicht }: BrievenPageProps) {
   const { data, error, loading } = useOverzicht();
   const [activeTab, setActiveTab] = useState<BrievenTabId>('verzonden');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -70,19 +70,15 @@ export function BrievenPage({ onBackToStappenplan }: BrievenPageProps) {
   return (
     <div className="mx-auto max-w-5xl px-8 py-8">
       <nav className="mb-6 text-sm text-gray-600" aria-label="Breadcrumb">
-        <span className="text-gray-600">Home</span>
-        <span className="mx-2">&gt;</span>
-        <span className="text-gray-800">Mijn situatie</span>
-        <span className="mx-2">&gt;</span>
         <button
           type="button"
-          onClick={onBackToStappenplan}
-          className="font-medium text-gray-700 underline-offset-2 hover:underline"
+          onClick={onBackToOverzicht}
+          className="hover:text-[#007AC8] hover:underline"
         >
-          Nabestaande
+          Overzicht
         </button>
         <span className="mx-2">&gt;</span>
-        <span className="font-semibold text-gray-900">Brieven</span>
+        <span className="font-semibold text-gray-900">Correspondentie</span>
       </nav>
 
       <div className="mb-8">
