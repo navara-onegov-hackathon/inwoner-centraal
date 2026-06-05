@@ -138,12 +138,33 @@ _TOOLS: list[dict[str, Any]] = [
 
 
 class GreenPTAgent:
-    """LLM Agent powered by GreenPT (gemma4)."""
+    """LLM Agent configured from environment variables."""
 
     def __init__(self) -> None:
+        a2a_api_key = os.getenv('A2A_LLM_API_KEY')
+        greenpt_api_key = os.getenv('GREENPT_API_KEY')
+        openai_api_key = os.getenv('OPENAI_API_KEY')
+
+        if a2a_api_key:
+            api_key = a2a_api_key
+            base_url = os.getenv('A2A_LLM_BASE_URL') or os.getenv('OPENAI_BASE_URL')
+            self.model = os.getenv('A2A_LLM_MODEL') or os.getenv('OPENAI_MODEL') or 'gpt-4.1-mini'
+        elif greenpt_api_key:
+            api_key = greenpt_api_key
+            base_url = os.getenv('A2A_LLM_BASE_URL') or 'https://api.greenpt.ai/v1'
+            self.model = os.getenv('A2A_LLM_MODEL') or 'gemma4'
+        elif openai_api_key:
+            api_key = openai_api_key
+            base_url = os.getenv('A2A_LLM_BASE_URL') or os.getenv('OPENAI_BASE_URL')
+            self.model = os.getenv('A2A_LLM_MODEL') or os.getenv('OPENAI_MODEL') or 'gpt-4.1-mini'
+        else:
+            raise RuntimeError(
+                'Set A2A_LLM_API_KEY, GREENPT_API_KEY, or OPENAI_API_KEY before starting the A2A server.'
+            )
+
         self.client = AsyncOpenAI(
-            api_key=os.getenv('GREENPT_API_KEY'),
-            base_url='https://api.greenpt.ai/v1',
+            api_key=api_key,
+            base_url=base_url,
         )
 
     async def invoke(
@@ -151,8 +172,8 @@ class GreenPTAgent:
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]] | None = None,
     ):
-        """Send messages to the GreenPT LLM and return the raw response."""
-        kwargs: dict[str, Any] = {'model': 'gemma4', 'messages': messages}
+        """Send messages to the configured LLM and return the raw response."""
+        kwargs: dict[str, Any] = {'model': self.model, 'messages': messages}
         if tools:
             kwargs['tools'] = tools
             kwargs['tool_choice'] = 'auto'
