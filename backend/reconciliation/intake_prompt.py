@@ -33,7 +33,7 @@ def build_system_prompt() -> str:
         '- gebruik state "blocked" alleen als er een echte blokkade is en geef dan een duidelijke blocked_reason\n'
         '- een proces waarvoor een keuze of extra informatie nodig is, moet handled_by "you" zijn en een ag-ui formulier bevatten\n'
         '- als een stap over betalen gaat, voert het systeem geen betaling uit en registreer je handled_by "you"\n'
-        '- als een stap over betalen gaat, gebruik je action_type "betalen" en een ag-ui formulier met submit_label "Betalen" en fields []; dit is alleen een demo-knop zonder echte betaalafhandeling\n'
+        '- als een stap over betalen gaat, voert het systeem geen betaling uit; action_type "betalen" is genoeg voor een dummy Betalen-knop zonder echte betaalafhandeling\n'
         '- als het systeem iets kan voorbereiden of later oppakken zonder extra keuze of betaling, mag handled_by "us" en state "pending" gebruikt worden\n'
         '- volg de notes en andere procesmetadata in de actieve processen; als agent_handles_when_assistance_max=true en assistance is "max", registreer handled_by "us" en state "pending"\n'
         '- processen met demo_always_relevant=true registreer je als relevant zonder externe toepasselijkheidscheck\n'

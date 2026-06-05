@@ -1,5 +1,7 @@
 from typing import Any
 
+from .config_registry import load_process_registry
+
 
 def build_overview_from_agent_output(
     *,
@@ -52,7 +54,9 @@ def _validate_process(process: dict[str, Any]) -> dict[str, Any]:
 
 def _validate_ag_ui_form(process_id: str, form: dict[str, Any]):
     for field in ['id', 'title', 'description', 'submit_label', 'fields']:
-        if not form.get(field):
+        if field not in form or form.get(field) is None:
+            raise ValueError(f'Form for {process_id} misses {field}.')
+        if field != 'fields' and form.get(field) == '':
             raise ValueError(f'Form for {process_id} misses {field}.')
     if not isinstance(form['fields'], list):
         raise ValueError(f'Form for {process_id} has non-list fields.')
@@ -66,7 +70,8 @@ def _process_to_taak(process: dict[str, Any], completed_task_ids: set[str]) -> d
     state = 'done' if process['id'] in completed_task_ids else process['state']
     deadline = process.get('deadline') or None
     urgent = True if process.get('urgent') and not deadline else None
-    action_type = process.get('action_type') if process.get('action_type') in {'betalen', 'tekenen', 'indienen', 'bevestigen'} else None
+    payment_button_required = _process_policy(process['id']).get('payment_button_required') is True
+    action_type = _action_type(process, payment_button_required)
     return {
         'id': process['id'],
         'titel': process['title'],
@@ -86,12 +91,13 @@ def _process_to_taak(process: dict[str, Any], completed_task_ids: set[str]) -> d
         'available_from': process.get('available_from') or None,
         'bron_brief_ids': _evidence_refs(process, 'brief'),
         'bron_verplichting_ids': _evidence_refs(process, 'obligation'),
-        'form': None if state == 'done' else process.get('form'),
+        'form': _task_form(process, state, payment_button_required),
         'resolution_options': [] if state == 'done' else process.get('resolution_options') or [],
     }
 
 
 def _public_process(process: dict[str, Any]) -> dict[str, Any]:
+    payment_button_required = _process_policy(process['id']).get('payment_button_required') is True
     public = {
         'id': process['id'],
         'title': process['title'],
@@ -100,7 +106,7 @@ def _public_process(process: dict[str, Any]) -> dict[str, Any]:
         'state': process['state'],
         'handled_by': process['handled_by'],
         'evidence': {'items': process.get('evidence') or []},
-        'form': process.get('form'),
+        'form': _task_form(process, process['state'], payment_button_required),
     }
     if process.get('deadline'):
         public['deadline'] = process['deadline']
@@ -151,6 +157,32 @@ def _amount(value):
         'bedrag': str(value.get('amount') or value.get('bedrag') or ''),
         'valuta': value.get('currency') or value.get('valuta') or 'EUR',
     }
+
+
+def _action_type(process: dict[str, Any], payment_button_required: bool):
+    if payment_button_required:
+        return 'betalen'
+    return process.get('action_type') if process.get('action_type') in {'betalen', 'tekenen', 'indienen', 'bevestigen'} else None
+
+
+def _task_form(process: dict[str, Any], state: str, payment_button_required: bool):
+    if state == 'done':
+        return None
+    if payment_button_required:
+        base = process.get('form') or {}
+        return {
+            'id': base.get('id') or f"{process['id']}-betalen",
+            'title': base.get('title') or process['title'],
+            'description': base.get('description') or 'Gebruik deze knop om verder te gaan.',
+            'submit_label': 'Betalen',
+            'fields': [],
+            **({'meta': base['meta']} if isinstance(base.get('meta'), dict) else {}),
+        }
+    return process.get('form')
+
+
+def _process_policy(process_id: str) -> dict[str, Any]:
+    return next((process for process in load_process_registry() if process['id'] == process_id), {})
 
 
 def _evidence_refs(process: dict[str, Any], expected_type: str) -> list[str]:

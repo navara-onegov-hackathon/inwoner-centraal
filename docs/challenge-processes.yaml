@@ -69,10 +69,10 @@ processes:
     process: WLZ-factuur betalen
     payment_button_required: true
     note: >
-      Voor de demo heeft deze stap een zichtbare Betalen-knop nodig. Die knop
-      voert geen echte betaling uit. Als de stap relevant is, registreert de
-      agent handled_by you, action_type betalen en een ag-ui formulier met
-      submit_label Betalen en fields [].
+      Voor de demo toont de UI alleen een zichtbare Betalen-knop. Die knop voert
+      geen echte betaling uit. Als de stap relevant is, registreert de agent
+      handled_by you. De backend voegt de dummy knop toe; voeg geen
+      bevestigingsvelden toe.
     relevant_if:
       any:
         - "verplichtingen contains item where organisatie == 'CAK'"
@@ -90,10 +90,10 @@ processes:
     process: Mislukte incasso oplossen
     payment_button_required: true
     note: >
-      Voor de demo heeft deze stap een zichtbare Betalen-knop nodig. Die knop
-      voert geen echte betaling uit. Als de stap relevant is, registreert de
-      agent handled_by you, action_type betalen en een ag-ui formulier met
-      submit_label Betalen en fields [].
+      Voor de demo toont de UI alleen een zichtbare Betalen-knop. Die knop voert
+      geen echte betaling uit. Als de stap relevant is, registreert de agent
+      handled_by you. De backend voegt de dummy knop toe; voeg geen
+      bevestigingsvelden toe.
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'CAK.INCASSO-MISLUKT'"
@@ -124,10 +124,10 @@ processes:
     process: Terugvordering zorgtoeslag afhandelen
     payment_button_required: true
     note: >
-      Voor de demo heeft deze stap een zichtbare Betalen-knop nodig. Die knop
-      voert geen echte betaling uit. Als de stap relevant is, registreert de
-      agent handled_by you, action_type betalen en een ag-ui formulier met
-      submit_label Betalen en fields [].
+      Voor de demo toont de UI alleen een zichtbare Betalen-knop. Die knop voert
+      geen echte betaling uit. Als de stap relevant is, registreert de agent
+      handled_by you. De backend voegt de dummy knop toe; voeg geen
+      bevestigingsvelden toe.
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'TOESLAGEN.TERUGVORDERING-ZORG'"
@@ -175,10 +175,10 @@ processes:
     process: Late naheffing of rekeningnummer-uitvraag afhandelen
     payment_button_required: true
     note: >
-      Als deze stap over betalen gaat, heeft de demo een zichtbare Betalen-knop
-      nodig. Die knop voert geen echte betaling uit. Registreer handled_by you,
-      action_type betalen en een ag-ui formulier met submit_label Betalen en
-      fields [].
+      Als deze stap over betalen gaat, toont de UI alleen een zichtbare
+      Betalen-knop. Die knop voert geen echte betaling uit. Registreer
+      handled_by you. De backend voegt de dummy knop toe; voeg geen
+      bevestigingsvelden toe.
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'TOESLAGEN.NAHEFFING-LATE-ZORG'"
@@ -262,10 +262,10 @@ processes:
     process: Gemeentelijke belastingen betalen of bezwaar maken
     payment_button_required: true
     note: >
-      Als deze stap over betalen gaat, heeft de demo een zichtbare Betalen-knop
-      nodig. Die knop voert geen echte betaling uit. Registreer handled_by you,
-      action_type betalen en een ag-ui formulier met submit_label Betalen en
-      fields [].
+      Als deze stap over betalen gaat, toont de UI alleen een zichtbare
+      Betalen-knop. Die knop voert geen echte betaling uit. Registreer
+      handled_by you. De backend voegt de dummy knop toe; voeg geen
+      bevestigingsvelden toe.
     relevant_if:
       any:
         - "correspondentie contains item where brief_code == 'GEMEENTE.LOKALE-BELASTING'"
@@ -283,10 +283,10 @@ processes:
     process: Waterschapsbelasting betalen
     payment_button_required: true
     note: >
-      Voor de demo heeft deze stap een zichtbare Betalen-knop nodig. Die knop
-      voert geen echte betaling uit. Als de stap relevant is, registreert de
-      agent handled_by you, action_type betalen en een ag-ui formulier met
-      submit_label Betalen en fields [].
+      Voor de demo toont de UI alleen een zichtbare Betalen-knop. Die knop voert
+      geen echte betaling uit. Als de stap relevant is, registreert de agent
+      handled_by you. De backend voegt de dummy knop toe; voeg geen
+      bevestigingsvelden toe.
     relevant_if:
       any:
         - "verplichtingen contains item where organisatie == 'Waterschap'"

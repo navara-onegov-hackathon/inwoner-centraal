@@ -374,8 +374,8 @@ def _validate_process_policy(process: dict[str, Any], state: IntakeAgentState):
             raise ValueError(
                 f"Process {process['id']} must be handled_by us with state pending when assistance is max."
             )
-    if _is_payment_button_required(process, policy):
-        _validate_payment_button_required(process)
+    if policy.get('payment_button_required') and process.get('handled_by') != 'you':
+        raise ValueError(f"Step {process['id']} with a Betalen button must be handled_by you.")
     if (
         policy.get('requires_form_when_relevant')
         and process.get('state') == 'open'
@@ -398,29 +398,6 @@ def _validate_process_policy(process: dict[str, Any], state: IntakeAgentState):
 
 def _process_policy(process_id: str) -> dict[str, Any] | None:
     return next((process for process in load_process_registry() if process['id'] == process_id), None)
-
-
-def _is_payment_button_required(process: dict[str, Any], policy: dict[str, Any]) -> bool:
-    return bool(
-        policy.get('payment_button_required')
-        or process.get('amount')
-        or process.get('action_type') == 'betalen'
-    )
-
-
-def _validate_payment_button_required(process: dict[str, Any]):
-    if process.get('handled_by') != 'you':
-        raise ValueError(f"Step {process['id']} with a Betalen button must be handled_by you.")
-    if process.get('action_type') != 'betalen':
-        raise ValueError(f"Step {process['id']} with a Betalen button must use action_type betalen.")
-    if process.get('state') == 'open':
-        form = process.get('form')
-        if not form:
-            raise ValueError(f"Step {process['id']} requires an ag-ui form for the demo Betalen button.")
-        if form.get('submit_label') != 'Betalen':
-            raise ValueError(f"Form for {process['id']} must use submit_label Betalen.")
-        if form.get('fields') != []:
-            raise ValueError(f"Form for {process['id']} must not contain fields; it should show only the Betalen button.")
 
 
 def _validate_irrelevant_process_id(process_id: str):
@@ -448,7 +425,9 @@ def _upsert_irrelevant_process(state: IntakeAgentState, process: dict[str, Any])
 
 def _validate_ag_ui_form(process_id: str, form: dict[str, Any]):
     for field in ['id', 'title', 'description', 'submit_label', 'fields']:
-        if not form.get(field):
+        if field not in form or form.get(field) is None:
+            raise ValueError(f'Form for {process_id} misses {field}.')
+        if field != 'fields' and form.get(field) == '':
             raise ValueError(f'Form for {process_id} misses {field}.')
     if not isinstance(form['fields'], list):
         raise ValueError(f'Form for {process_id} has non-list fields.')
