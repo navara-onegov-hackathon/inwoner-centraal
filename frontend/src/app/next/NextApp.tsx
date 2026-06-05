@@ -12,6 +12,9 @@ import { useBegeleidingsVoorkeur, useGegevensProfiel, useMeldingenVoorkeur, useO
 import { mockOverzicht } from './api/mockOverzicht';
 import { ONBOARDING_STORAGE_KEY } from './types/begeleiding';
 
+/** TODO: set to false before commit — temporarily skips the onboarding start workflow */
+const SKIP_START_WORKFLOW = false;
+
 export function NextApp() {
   const [loggedOut, setLoggedOut] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,6 +23,7 @@ export function NextApp() {
     return window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true' ? 'stappenplan' : 'home';
   });
   const { completed, complete, reset } = useOnboarding();
+  const onboardingDone = SKIP_START_WORKFLOW || completed;
   const { gegevens } = useGegevensProfiel();
   const { voorkeur, setVoorkeur } = useBegeleidingsVoorkeur();
   const { meldingen, setMeldingen } = useMeldingenVoorkeur();
@@ -39,7 +43,7 @@ export function NextApp() {
   };
 
   const renderContent = () => {
-    if (!completed) {
+    if (!onboardingDone) {
       return (
         <StartWizard
           persona={persona}
@@ -94,9 +98,9 @@ export function NextApp() {
     <div className="flex h-screen flex-col bg-[#f7f7f7]">
       <AppHeader
         onLogout={() => setLoggedOut(true)}
-        begeleidingVoorkeur={completed ? voorkeur : undefined}
+        begeleidingVoorkeur={onboardingDone ? voorkeur : undefined}
         onBegeleidingChange={setVoorkeur}
-        meldingenVoorkeur={completed ? meldingen : undefined}
+        meldingenVoorkeur={onboardingDone ? meldingen : undefined}
         onMeldingenChange={setMeldingen}
         onResetOnboarding={resetOnboarding}
         sidebarOpen={sidebarOpen}
