@@ -29,10 +29,6 @@ The prototype maps directly to the challenge themes:
 
 AI is used in the background for discovery, tool selection, source interpretation, normalization, discrepancy detection, and generated follow-up questions. It is deliberately not presented as an open grief chatbot.
 
-## Demo Video
-
-<video src="docs/demo-video.mp4" width="320" height="240" controls></video>
-
 ## Demo Flow
 
 1. Truus opens the service and receives a calm condolence message.
