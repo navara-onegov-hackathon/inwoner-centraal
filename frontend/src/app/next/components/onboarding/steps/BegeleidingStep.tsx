@@ -36,17 +36,6 @@ const OPTIONS: {
     ],
     hint: 'Geschikt als u elk detail zelf wilt beoordelen.',
   },
-  {
-    assistance: 'partial',
-    title: 'Ik kies per taak',
-    summary: 'Bepaal per taak of u het zelf regelt of hulp wilt.',
-    bullets: [
-      'Wij doen niks vanzelf op de achtergrond',
-      'U heeft volledige controle',
-      'U kunt per taak controle uit handen geven',
-    ],
-    hint: 'Geschikt als u sommige stappen zelf wilt doen, en andere niet.',
-  },
 ];
 
 export function BegeleidingStep({ voorkeur, onChange, onNext, onBack }: BegeleidingStepProps) {

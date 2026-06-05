@@ -17,9 +17,8 @@ describe('agentDelegation', () => {
   const overzicht = deriveOverzicht(fixture as TruusCeesFixture, DEMO_TODAY);
   const taak = overzicht.taken[0];
 
-  it('allows on-demand agent only for zelf regelen and per taak', () => {
+  it('allows on-demand automatic handling only for zelf regelen', () => {
     expect(allowsOnDemandAgent(ZELF)).toBe(true);
-    expect(allowsOnDemandAgent({ assistance: 'partial', zelfRegelenOrganisaties: [] })).toBe(true);
     expect(allowsOnDemandAgent(MAX)).toBe(false);
   });
 

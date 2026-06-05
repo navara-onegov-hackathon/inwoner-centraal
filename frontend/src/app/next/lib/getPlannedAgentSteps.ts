@@ -59,7 +59,7 @@ const ALL_PLANNED: PlannedAgentStep[] = [
 ];
 
 export function getPlannedAgentSteps(voorkeur: BegeleidingsVoorkeur): PlannedAgentStep[] {
-  if (voorkeur.assistance === 'none' || voorkeur.assistance === 'partial') {
+  if (voorkeur.assistance === 'none') {
     return ALL_PLANNED.map((s) => ({
       ...s,
       voorWie: 'u' as const,
