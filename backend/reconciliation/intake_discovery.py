@@ -62,6 +62,7 @@ def stream_intake_discovery(
         settings.INTAKE_DISCOVERY_SEED if settings.INTAKE_DISCOVERY_SEED is not None else 'random',
         assistance,
     )
+    yield 'progress', {'line': 'Basisgegevens verzamelen.'}
 
     for turn_index in range(40):
         logger.info('Intake discovery model turn %s started', turn_index + 1)
