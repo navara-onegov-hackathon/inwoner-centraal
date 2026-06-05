@@ -75,7 +75,7 @@ export function StartWizard({
 
   if (delegatedTo) {
     return (
-      <DelegatieAfgerondStep delegateName={delegatedTo.naam} />
+      <DelegatieAfgerondStep delegateName={delegatedTo.naam} mode={delegatedTo.mode} />
     );
   }
 
@@ -108,7 +108,6 @@ export function StartWizard({
             {step === 'delegatie' && (
               <DelegatieStep
                 onSelfContinue={next}
-                onTogether={next}
                 onDelegate={setDelegatedTo}
                 onBack={back}
               />
