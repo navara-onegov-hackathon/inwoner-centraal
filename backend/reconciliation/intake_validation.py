@@ -1,0 +1,181 @@
+from datetime import date
+from typing import Any
+
+
+def build_overview_from_agent_output(
+    *,
+    user_info: dict[str, Any],
+    processes: list[dict[str, Any]],
+    completed_task_ids: set[str],
+) -> dict[str, Any]:
+    validated_processes = [_validate_process(process) for process in processes]
+    taken = [_process_to_taak(process, completed_task_ids) for process in validated_processes]
+    agentstappen = [_process_to_agentstap(process) for process in validated_processes if _is_us_background(process)]
+
+    return {
+        'general_information': _general_information(user_info),
+        'processes': [_public_process(process) for process in validated_processes],
+        'persona': _persona(user_info),
+        'samenvatting': {
+            'actie_van_u': 0,
+            'op_achtergrond': 0,
+            'geregeld_door_ons': 0,
+            'wachten_op_organisatie': 0,
+            'afgerond': 0,
+        },
+        'regelingen': [],
+        'agentstappen': agentstappen,
+        'taken': taken,
+        'verwacht_binnenkort': [],
+        'geen_actie_nodig': [],
+        'correspondentie': [],
+        'verplichtingen': [],
+        'rechten': [],
+    }
+
+
+def _validate_process(process: dict[str, Any]) -> dict[str, Any]:
+    required = ['id', 'organisation', 'title', 'summary', 'state', 'handled_by', 'reason']
+    missing = [field for field in required if not process.get(field)]
+    if missing:
+        raise ValueError(f"Registered process {process.get('id') or '<unknown>'} misses fields: {', '.join(missing)}")
+    if process['state'] not in {'open', 'blocked', 'done', 'pending'}:
+        raise ValueError(f"Invalid state for process {process['id']}: {process['state']}")
+    if process['handled_by'] not in {'you', 'us'}:
+        raise ValueError(f"Invalid handled_by for process {process['id']}: {process['handled_by']}")
+    if process.get('deadline') and process.get('urgent'):
+        raise ValueError(f"Process {process['id']} has both deadline and urgent.")
+    if process.get('form'):
+        _validate_ag_ui_form(process['id'], process['form'])
+    return dict(process)
+
+
+def _validate_ag_ui_form(process_id: str, form: dict[str, Any]):
+    for field in ['id', 'title', 'description', 'submit_label', 'fields']:
+        if not form.get(field):
+            raise ValueError(f'Form for {process_id} misses {field}.')
+    if not isinstance(form['fields'], list):
+        raise ValueError(f'Form for {process_id} has non-list fields.')
+    for field in form['fields']:
+        for required in ['name', 'label', 'type', 'required']:
+            if required not in field:
+                raise ValueError(f"Form field for {process_id} misses {required}.")
+
+
+def _process_to_taak(process: dict[str, Any], completed_task_ids: set[str]) -> dict[str, Any]:
+    state = 'done' if process['id'] in completed_task_ids else process['state']
+    deadline = process.get('deadline') or None
+    urgent = True if process.get('urgent') and not deadline else None
+    action_type = process.get('action_type') if process.get('action_type') in {'betalen', 'tekenen', 'indienen', 'bevestigen'} else None
+    return {
+        'id': process['id'],
+        'titel': process['title'],
+        'samenvatting': process['summary'],
+        'organisatie': process['organisation'],
+        'status': 'in_behandeling' if state in {'done', 'pending'} else 'actie_nodig',
+        'deadline': deadline,
+        'urgent': urgent,
+        'bedrag': _amount(process.get('amount')),
+        'handeling_door_nabestaande': process['handled_by'] == 'you',
+        'handled_by': process['handled_by'],
+        'state': state,
+        'actie_type': action_type,
+        'toon_cta_in_lijst': state == 'open',
+        'cta_label': process.get('cta_label') or _cta_label_for(action_type),
+        'bron_brief_ids': _evidence_refs(process, 'brief'),
+        'bron_verplichting_ids': _evidence_refs(process, 'obligation'),
+        'form': None if state == 'done' else process.get('form'),
+        'resolution_options': [] if state == 'done' else process.get('resolution_options') or [],
+    }
+
+
+def _process_to_agentstap(process: dict[str, Any]) -> dict[str, Any]:
+    return {
+        'id': f"agentstap-{process['id']}",
+        'organisatie': process['organisation'],
+        'omschrijving': process['title'],
+        'uitgevoerd_op': date.today().isoformat(),
+        'type': 'voorbereid_door_agent',
+        'status': 'voltooid' if process['state'] == 'done' else 'bezig',
+        'state': process['state'],
+        'handled_by': 'us',
+    }
+
+
+def _public_process(process: dict[str, Any]) -> dict[str, Any]:
+    public = {
+        'id': process['id'],
+        'title': process['title'],
+        'description': process['summary'],
+        'organisation': process['organisation'],
+        'state': process['state'],
+        'handled_by': process['handled_by'],
+        'evidence': {'items': process.get('evidence') or []},
+        'form': process.get('form'),
+    }
+    if process.get('deadline'):
+        public['deadline'] = process['deadline']
+    elif process.get('urgent'):
+        public['urgent'] = True
+    return public
+
+
+def _general_information(user_info: dict[str, Any]) -> dict[str, Any]:
+    return {
+        'deceased': user_info.get('deceased') or {},
+        'partner': user_info.get('surviving_partner') or {},
+        'relationship': user_info.get('relationship') or {},
+    }
+
+
+def _persona(user_info: dict[str, Any]) -> dict[str, Any]:
+    deceased = user_info.get('deceased') or {}
+    partner = user_info.get('surviving_partner') or {}
+    notices = user_info.get('notices') or []
+    return {
+        'nabestaande': _name(partner) or 'Nabestaande',
+        'overledene': _name(deceased) or 'Overledene',
+        'overlijdensdatum': deceased.get('date_of_death') or deceased.get('overlijdensdatum') or '',
+        'postadres_alert': ' '.join(notices) or None,
+        'postadres_cta_label': 'Postadres controleren' if notices else None,
+    }
+
+
+def _name(value: dict[str, Any]) -> str:
+    return (
+        value.get('name')
+        or value.get('naam')
+        or ' '.join(part for part in [value.get('voornamen'), value.get('geslachtsnaam')] if part)
+    )
+
+
+def _is_us_background(process: dict[str, Any]) -> bool:
+    return process.get('handled_by') == 'us' and process.get('state') in {'open', 'pending', 'done'}
+
+
+def _amount(value):
+    if not value:
+        return None
+    return {
+        'bedrag': str(value.get('amount') or value.get('bedrag') or ''),
+        'valuta': value.get('currency') or value.get('valuta') or 'EUR',
+    }
+
+
+def _evidence_refs(process: dict[str, Any], expected_type: str) -> list[str]:
+    refs = []
+    for item in process.get('evidence') or []:
+        source_type = (item.get('source_type') or '').lower()
+        if expected_type in source_type:
+            refs.append(item.get('reference') or '')
+    return [ref for ref in refs if ref]
+
+
+def _cta_label_for(action_type):
+    mapping = {
+        'betalen': 'Nu betalen',
+        'indienen': 'Aangifte starten',
+        'tekenen': 'Ondertekenen',
+        'bevestigen': 'Bekijk details',
+    }
+    return mapping.get(action_type, 'Bekijk details')

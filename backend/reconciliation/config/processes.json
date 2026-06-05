@@ -1,0 +1,251 @@
+[
+  {
+    "id": "generic-address-check",
+    "organisation": "Generic",
+    "title": "Check whether the correspondence address matches the organisation-known address",
+    "category": "generic",
+    "requires_resolution_options_when_relevant": true,
+    "notes": "This generic process may result in multiple concrete organisation-specific processes. If important mail may go to the wrong address and no concrete deadline exists, mark the process urgent. For assistance=max, the system may handle supported address changes. For assistance=none or partial, offer user choices to update the address or keep it as-is; keeping it as-is still completes the step."
+  },
+  {
+    "id": "svb-anw-aanvragen",
+    "organisation": "SVB",
+    "title": "ANW aanvragen",
+    "category": "fixed",
+    "notes": "Relevant only if discovered data indicates a possible ANW entitlement or open application path."
+  },
+  {
+    "id": "svb-overlijdensuitkering-volgen",
+    "organisation": "SVB",
+    "title": "Overlijdensuitkering volgen",
+    "category": "fixed",
+    "notes": "Relevant if SVB data or correspondence indicates an AOW death benefit or related payment."
+  },
+  {
+    "id": "svb-jaaropgave-bewaren",
+    "organisation": "SVB",
+    "title": "Jaaropgave bewaren",
+    "category": "fixed",
+    "notes": "Relevant if SVB correspondence indicates a year statement that should be retained."
+  },
+  {
+    "id": "cak-wlz-factuur-betalen",
+    "organisation": "CAK",
+    "title": "WLZ-factuur betalen",
+    "category": "fixed",
+    "notes": "Relevant when CAK data shows an outstanding WLZ invoice or related correspondence."
+  },
+  {
+    "id": "cak-incasso-mislukt-oplossen",
+    "organisation": "CAK",
+    "title": "Mislukte incasso oplossen",
+    "category": "fixed",
+    "notes": "Relevant when CAK data shows a failed direct debit or unresolved payment issue."
+  },
+  {
+    "id": "toeslagen-zorg-herziening-beoordelen",
+    "organisation": "Toeslagen",
+    "title": "Herziene beschikking zorgtoeslag beoordelen",
+    "category": "fixed",
+    "notes": "Relevant when correspondence or obligations show a healthcare allowance recalculation."
+  },
+  {
+    "id": "toeslagen-zorg-terugvordering-afhandelen",
+    "organisation": "Toeslagen",
+    "title": "Terugvordering zorgtoeslag afhandelen",
+    "category": "fixed",
+    "notes": "Relevant when discovered data shows a healthcare allowance repayment or recovery."
+  },
+  {
+    "id": "toeslagen-huur-herberekening-volgen",
+    "organisation": "Toeslagen",
+    "title": "Huurtoeslag herberekening volgen",
+    "category": "fixed",
+    "notes": "Relevant when partner or household data suggests rent allowance recalculation after death."
+  },
+  {
+    "id": "toeslagen-late-definitieve-toekenning-volgen",
+    "organisation": "Toeslagen",
+    "title": "Definitieve toekenning zorgtoeslag volgen",
+    "category": "fixed",
+    "notes": "Relevant when final healthcare allowance assessment is expected or discovered."
+  },
+  {
+    "id": "toeslagen-late-naheffing-afhandelen",
+    "organisation": "Toeslagen",
+    "title": "Late naheffing of rekeningnummer-uitvraag afhandelen",
+    "category": "fixed",
+    "notes": "Relevant when discovered data shows a late assessment, repayment, or bank account request."
+  },
+  {
+    "id": "belastingdienst-contactpersoon-doorgeven",
+    "organisation": "Belastingdienst",
+    "title": "Contactpersoon doorgeven",
+    "category": "fixed",
+    "notes": "Relevant when Belastingdienst letters ask the heirs to provide or confirm a contact person."
+  },
+  {
+    "id": "belastingdienst-erfbelasting",
+    "organisation": "Belastingdienst",
+    "title": "Aangifte erfbelasting",
+    "category": "fixed",
+    "notes": "Relevant when letters or discovered obligations indicate inheritance tax declaration."
+  },
+  {
+    "id": "belastingdienst-ib-overlijdensjaar",
+    "organisation": "Belastingdienst",
+    "title": "Aangifte of aanslag inkomstenbelasting overlijdensjaar",
+    "category": "fixed",
+    "notes": "Relevant when letters or discovered obligations concern income tax for the year of death."
+  },
+  {
+    "id": "gemeente-condoleance-tonen",
+    "organisation": "Gemeente",
+    "title": "Gemeentelijke condoleance tonen",
+    "category": "fixed",
+    "always_include": true,
+    "notes": "Gemeente may not expose an API yet. Include only when policy or case information makes the step meaningful."
+  },
+  {
+    "id": "gemeente-parkeervergunning",
+    "organisation": "Gemeente",
+    "title": "Parkeervergunning overnemen of stopzetten",
+    "category": "fixed",
+    "always_include": true,
+    "notes": "Gemeente may not expose an API yet. Use case data to determine whether a parking permit step should be included."
+  },
+  {
+    "id": "gemeente-lokale-belasting",
+    "organisation": "Gemeente",
+    "title": "Gemeentelijke belastingen betalen of bezwaar maken",
+    "category": "fixed",
+    "always_include": true,
+    "notes": "Gemeente may not expose an API yet. Include if peildatum or local tax obligations plausibly apply."
+  },
+  {
+    "id": "waterschap-aanslag",
+    "organisation": "Waterschap",
+    "title": "Waterschapsbelasting betalen",
+    "category": "fixed",
+    "notes": "Relevant when obligations or correspondence show a water authority assessment."
+  },
+  {
+    "id": "rdw-overschrijven",
+    "organisation": "RDW",
+    "title": "Voertuig overschrijven of vrijwaring regelen",
+    "category": "fixed",
+    "requires_form_when_relevant": true,
+    "notes": "Use RDW OpenAPI to discover both transfer and vrijwaren operations. Offer the user a choice between overschrijven and vrijwaren when both are available. Infer legal basis such as ERFRECHT when the context supports it; do not ask for data that can be inferred. Ask only for unavailable information or choices that cannot be determined automatically. Generate the ag-ui form from discovered API request schemas and process context."
+  },
+  {
+    "id": "rdw-beeindiging-tenaamstelling-volgen",
+    "organisation": "RDW",
+    "title": "Beindiging tenaamstelling volgen",
+    "category": "fixed",
+    "notes": "Relevant when RDW data indicates the tenaamstelling has ended or will end if no action is taken."
+  },
+  {
+    "id": "cjib-boete",
+    "organisation": "CJIB",
+    "title": "Openstaande boete of vordering afhandelen",
+    "category": "fixed",
+    "notes": "Relevant when discovered data indicates an open fine or collection item."
+  },
+  {
+    "id": "uwv-stopzetting-tonen",
+    "organisation": "UWV",
+    "title": "Stopzetting WW of WIA tonen",
+    "category": "fixed",
+    "notes": "Relevant when discovered data indicates a UWV benefit stop or informational notice."
+  },
+  {
+    "id": "duo-studieschuld-vervalt-tonen",
+    "organisation": "DUO",
+    "title": "Vervallen studieschuld tonen",
+    "category": "fixed",
+    "notes": "Relevant when discovered data indicates a DUO debt cancellation or related notice."
+  },
+  {
+    "id": "partnerrecht-nabestaandenpensioen",
+    "organisation": "UWV",
+    "title": "Mogelijk nabestaandenpensioen onderzoeken",
+    "category": "fixed",
+    "notes": "Relevant when employment, pension, or partner data suggests a surviving dependant pension may exist."
+  },
+  {
+    "id": "partnerrecht-bijstand-of-inkomensondersteuning",
+    "organisation": "Diverse",
+    "title": "Mogelijk recht op bijstand of inkomensondersteuning onderzoeken",
+    "category": "fixed",
+    "notes": "Relevant when partner income or household changes suggest potential income support."
+  },
+  {
+    "id": "kvk-onderneming-uitschrijven-of-voortzetten",
+    "organisation": "KVK",
+    "title": "Onderneming uitschrijven, liquideren, of voortzetten",
+    "category": "fixed",
+    "notes": "Relevant when KVK or case data shows the deceased had a business. Future KVK API should be added to the API registry without code changes."
+  },
+  {
+    "id": "rvo-wbso-afhandelen",
+    "organisation": "RVO",
+    "title": "WBSO-verplichting afhandelen",
+    "category": "fixed",
+    "notes": "Relevant when RVO or business data shows WBSO obligations."
+  },
+  {
+    "id": "rvo-subsidie-eindafrekening-of-voortgang",
+    "organisation": "RVO",
+    "title": "RVO-subsidieverplichtingen afhandelen",
+    "category": "fixed",
+    "notes": "Relevant when RVO or business data shows subsidy obligations."
+  },
+  {
+    "id": "gemeente-akte-van-overlijden-aanvragen",
+    "organisation": "Gemeente",
+    "title": "Akte van overlijden aanvragen",
+    "category": "non_challenge",
+    "demo_default_applicability": "not_applicable",
+    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data."
+  },
+  {
+    "id": "notaris-verklaring-van-erfrecht",
+    "organisation": "Notaris",
+    "title": "Verklaring van erfrecht aanvragen",
+    "category": "non_challenge",
+    "demo_default_applicability": "not_applicable",
+    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data."
+  },
+  {
+    "id": "post-reclamepost-stopzetten",
+    "organisation": "Diverse",
+    "title": "Geadresseerde reclamepost stopzetten",
+    "category": "non_challenge",
+    "demo_default_applicability": "not_applicable",
+    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data."
+  },
+  {
+    "id": "contracten-abonnementen-opzeggen",
+    "organisation": "Diverse",
+    "title": "Abonnementen en contracten opzeggen of wijzigen",
+    "category": "non_challenge",
+    "demo_default_applicability": "not_applicable",
+    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data."
+  },
+  {
+    "id": "verzekeringen-aanpassen-of-opzeggen",
+    "organisation": "Verzekeraar",
+    "title": "Verzekeringen aanpassen of opzeggen",
+    "category": "non_challenge",
+    "demo_default_applicability": "not_applicable",
+    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data."
+  },
+  {
+    "id": "hypotheekverstrekker-melden",
+    "organisation": "Hypotheekverstrekker",
+    "title": "Overlijden melden bij hypotheekverstrekker",
+    "category": "non_challenge",
+    "demo_default_applicability": "not_applicable",
+    "notes": "For this demo, non-challenge-backed process defaults to not applicable unless explicitly overridden by future data."
+  }
+]

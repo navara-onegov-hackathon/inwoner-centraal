@@ -154,3 +154,4 @@ export const BEGELEIDING_STORAGE_KEY = 'inwoner-centraal:begeleidings-voorkeur';
 export const GEGEVENS_STORAGE_KEY = 'inwoner-centraal:gegevens-profiel';
 export const MELDINGEN_STORAGE_KEY = 'inwoner-centraal:meldingen-voorkeur';
 export const OVERZICHT_STORAGE_KEY = 'inwoner-centraal:overzicht';
+export const CASE_DATA_STORAGE_KEY = 'inwoner-centraal:case-data';

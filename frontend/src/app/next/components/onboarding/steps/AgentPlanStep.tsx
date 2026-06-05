@@ -27,8 +27,8 @@ export function AgentPlanStep({
 }: AgentPlanStepProps) {
   const [lines, setLines] = useState<LogLine[]>(() =>
     initialResult
-      ? [{ id: 'complete', text: 'Discovery is al afgerond voor deze sessie.', status: 'done' }]
-      : [{ id: 'start', text: 'Discovery wordt gestart...', status: 'pending' }],
+      ? [{ id: 'complete', text: 'Gegevens zijn al verzameld voor deze sessie.', status: 'done' }]
+      : [{ id: 'start', text: 'Verbinding maken met de intake agent', status: 'pending' }],
   );
   const [resultReady, setResultReady] = useState(Boolean(initialResult));
   const [error, setError] = useState<string | null>(null);

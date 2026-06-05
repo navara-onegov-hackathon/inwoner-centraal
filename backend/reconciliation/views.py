@@ -209,7 +209,6 @@ def intake_discovery_stream(request):
 
     def event_stream():
         try:
-            yield "event: progress\ndata: {\"line\": \"Discovery gestart\"}\n\n"
             for event_type, payload in stream_intake_discovery(
                 deceased_bsn=deceased_bsn,
                 assistance=assistance,

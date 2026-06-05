@@ -1,0 +1,26 @@
+[
+  {
+    "id": "cak",
+    "name": "CAK mock API",
+    "description": "CAK data for clients, correspondence addresses, WLZ invoices, and payment status.",
+    "base_url_setting": "MOCK_CAK_BASE_URL",
+    "default_base_url": "http://127.0.0.1:8001",
+    "openapi_path": "/openapi.json"
+  },
+  {
+    "id": "rdw",
+    "name": "RDW mock API",
+    "description": "RDW data for vehicles registered to a holder, vehicle details, transfer of ownership, address updates, and vrijwaren.",
+    "base_url_setting": "MOCK_RDW_BASE_URL",
+    "default_base_url": "http://127.0.0.1:8002",
+    "openapi_path": "/openapi.json"
+  },
+  {
+    "id": "svb",
+    "name": "SVB mock API",
+    "description": "SVB data for surviving partners and benefits such as AOW death benefit or ANW-related information.",
+    "base_url_setting": "MOCK_SVB_BASE_URL",
+    "default_base_url": "http://127.0.0.1:8003",
+    "openapi_path": "/openapi.json"
+  }
+]

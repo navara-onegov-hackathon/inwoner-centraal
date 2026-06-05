@@ -1,0 +1,8 @@
+[
+  {
+    "id": "belastingdienst_brieven",
+    "name": "Belastingdienst brieven A2A agent",
+    "description": "Agent-to-agent endpoint for retrieving and interpreting Belastingdienst correspondence for a deceased BSN.",
+    "input_notes": "Call with an object containing bsn and query. Use it to retrieve Belastingdienst letters and determine additional dynamic processes."
+  }
+]

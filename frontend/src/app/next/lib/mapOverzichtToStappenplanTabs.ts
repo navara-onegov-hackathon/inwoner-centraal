@@ -63,6 +63,15 @@ export function mapOverzichtToStappenplanTabs(
   ];
 
   const gedaan: StappenplanRow[] = [
+    ...board.afgerond.taken.map((taak) => ({
+      id: taak.id,
+      kind: 'taak' as const,
+      title: taak.titel,
+      description: taak.samenvatting,
+      organisatie: taak.organisatie,
+      completed: true,
+      taakId: taak.id,
+    })),
     ...board.afgerond.regelingen.map((r) => ({
       id: r.id,
       kind: 'regeling' as const,

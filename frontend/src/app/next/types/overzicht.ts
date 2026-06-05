@@ -1,6 +1,7 @@
 export type Detailniveau = 'begeleide' | 'uitgebreide';
 export type ProcessState = 'open' | 'blocked' | 'done' | 'pending';
 export type HandledBy = 'you' | 'us';
+export type AGUIFieldType = 'text' | 'select';
 
 export type TaakStatus = 'actie_nodig' | 'wacht_op_u' | 'in_behandeling';
 export type TaakActieType = 'betalen' | 'tekenen' | 'indienen' | 'bevestigen' | null;
@@ -64,6 +65,46 @@ export interface Taak {
   cta_label?: string;
   bron_brief_ids: string[];
   bron_verplichting_ids: string[];
+  form?: AGUIForm | null;
+  resolution_options?: ResolutionOption[];
+}
+
+export interface AGUIFieldOption {
+  label: string;
+  value: string;
+}
+
+export interface AGUIFieldCondition {
+  field: string;
+  equals: string;
+}
+
+export interface AGUIField {
+  name: string;
+  label: string;
+  type: AGUIFieldType;
+  required: boolean;
+  placeholder?: string;
+  prefill?: string;
+  options?: AGUIFieldOption[];
+  show_when?: AGUIFieldCondition;
+  show_when_all?: AGUIFieldCondition[];
+}
+
+export interface AGUIForm {
+  id: string;
+  title: string;
+  description: string;
+  submit_label: string;
+  fields: AGUIField[];
+  meta?: Record<string, unknown>;
+}
+
+export interface ResolutionOption {
+  id: string;
+  label: string;
+  action: 'keep_as_is' | 'update_to_known_address';
+  payload?: Record<string, unknown>;
 }
 
 export interface VerwachtItem {
@@ -125,6 +166,7 @@ export interface OverzichtResponse {
     deadline?: string;
     urgent?: boolean;
     evidence?: Record<string, unknown>;
+    form?: AGUIForm | null;
   }>;
   persona: PersonaContext;
   samenvatting: SamenvattingCounts;
@@ -147,6 +189,7 @@ export interface StatusBoard {
   };
   wachten_op_organisatie: VerwachtItem[];
   afgerond: {
+    taken: Taak[];
     regelingen: Regeling[];
     geen_actie: GeenActieItem[];
   };

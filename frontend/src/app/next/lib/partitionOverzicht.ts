@@ -17,7 +17,9 @@ export function partitionOverzicht(
   overzicht: OverzichtResponse,
   prefs: BegeleidingsVoorkeur,
 ): StatusBoard {
-  const actie_van_u = overzicht.taken.filter((t) => shouldShowInActieVanU(t, prefs));
+  const openTasks = overzicht.taken.filter((t) => t.state !== 'done');
+  const doneTasks = overzicht.taken.filter((t) => t.state === 'done');
+  const actie_van_u = openTasks.filter((t) => shouldShowInActieVanU(t, prefs));
 
   const showAgentActivity = prefs.assistance === 'max';
   const op_achtergrond = showAgentActivity
@@ -33,6 +35,7 @@ export function partitionOverzicht(
 
   const afgerondRegelingen = overzicht.regelingen.filter((r) => r.status === 'afgerond');
   const afgerond = {
+    taken: doneTasks,
     regelingen: afgerondRegelingen,
     geen_actie: overzicht.geen_actie_nodig,
   };
@@ -56,7 +59,8 @@ export function buildSamenvattingCounts(board: StatusBoard) {
     geregeld_door_ons:
       board.geregeld_door_ons.agentstappen.length + board.geregeld_door_ons.regelingen.length,
     wachten_op_organisatie: board.wachten_op_organisatie.length,
-    afgerond: board.afgerond.regelingen.length + board.afgerond.geen_actie.length,
+    afgerond:
+      board.afgerond.taken.length + board.afgerond.regelingen.length + board.afgerond.geen_actie.length,
   };
 }
 

@@ -1,6 +1,5 @@
 import { Loader2, Printer } from 'lucide-react';
 import { useMemo } from 'react';
-import { DataCorrectionBlock } from '../../../shared/components/DataCorrectionBlock';
 import { applyPartitionToOverzicht } from '../../lib/partitionOverzicht';
 import type { BegeleidingsVoorkeur } from '../../types/begeleiding';
 import { useDetailniveau } from '../../hooks/useDetailniveau';
@@ -12,7 +11,7 @@ interface OverzichtPageProps {
 }
 
 export function OverzichtPage({ voorkeur }: OverzichtPageProps) {
-  const { data, error, loading } = useOverzicht();
+  const { data, error, loading, setData } = useOverzicht();
   const { isUitgebreid } = useDetailniveau();
 
   const partitioned = useMemo(
@@ -60,9 +59,11 @@ export function OverzichtPage({ voorkeur }: OverzichtPageProps) {
         </button>
       </div>
 
-      <DataCorrectionBlock />
-
-      <StappenplanOverzichtPanel partitioned={partitioned} isUitgebreid={isUitgebreid} />
+      <StappenplanOverzichtPanel
+        partitioned={partitioned}
+        isUitgebreid={isUitgebreid}
+        onOverzichtChange={setData}
+      />
     </div>
   );
 }

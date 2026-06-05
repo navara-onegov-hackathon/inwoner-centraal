@@ -13,6 +13,7 @@ import { StappenplanRow } from './StappenplanRow';
 interface StappenplanOverzichtPanelProps {
   partitioned: OverzichtResponse & { statusBoard: StatusBoard };
   isUitgebreid: boolean;
+  onOverzichtChange: (next: OverzichtResponse | null) => void;
 }
 
 const tabs: { id: StappenplanTabId; label: string }[] = [
@@ -25,6 +26,7 @@ const tabs: { id: StappenplanTabId; label: string }[] = [
 export function StappenplanOverzichtPanel({
   partitioned,
   isUitgebreid,
+  onOverzichtChange,
 }: StappenplanOverzichtPanelProps) {
   const [activeTab, setActiveTab] = useState<StappenplanTabId>('nog-te-doen');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -208,6 +210,7 @@ export function StappenplanOverzichtPanel({
               row={row}
               overzicht={partitioned}
               isUitgebreid={isUitgebreid}
+              onOverzichtChange={onOverzichtChange}
               expanded={expandedId === row.id}
               onToggle={() => toggleExpanded(row)}
             />

@@ -25,5 +25,5 @@ export function useOverzicht() {
       .finally(() => setLoading(false));
   }, []);
 
-  return { data, error, loading };
+  return { data, error, loading, setData };
 }

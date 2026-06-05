@@ -18,6 +18,7 @@ agent-driven.
 That means:
 
 - an LLM agent determines which tools to call
+- an LLM agent determines the basic user/case information first
 - an LLM agent inspects the returned OpenAPI documents
 - an LLM agent decides which concrete REST endpoint to call next, including
   method, URL, query, and body
@@ -59,6 +60,10 @@ The backend may still contain thin generic infrastructure for:
 
 But the backend must not become a second rules engine for process relevance.
 The same applies to process form generation.
+
+This is complete agent-driven discovery with no hardcoded sequence and no
+hardcoded domain conversion logic. The backend provides tools and transport.
+The agent figures out the sequence, meaning, relevance, and missing data.
 
 ## Scope
 
@@ -128,14 +133,15 @@ organisation, source, or check being performed, not vague phase labels.
 
 The backend agent:
 
-1. retrieves general information for the deceased case
-2. inspects configured process data and available API/A2A registries
-3. chooses which APIs or A2A agents to call
-4. discovers the exact REST operations by reading OpenAPI documents
-5. retrieves Belastingdienst letters through A2A where relevant
-6. determines which fixed and dynamic processes are relevant
-7. generates process-level forms where required information is still missing
-8. returns the final normalized response shape
+1. determines the basic case information for the deceased case
+2. registers that basic information through a tool call
+3. inspects configured process data and available API/A2A registries
+4. chooses which APIs or A2A agents to call
+5. discovers the exact REST operations by reading OpenAPI documents
+6. retrieves Belastingdienst letters through A2A where relevant
+7. determines which fixed and dynamic processes are relevant
+8. generates process-level forms where required information is still missing
+9. returns the final normalized response shape
 
 ### Exit point
 
@@ -337,6 +343,15 @@ policy input for the agent.
 
 ## Backend Tooling Model
 
+These are OpenAI tools. They must be implemented and registered as actual
+tools in the OpenAI client call.
+
+They are not prompt conventions.
+
+They are not pseudo-tools.
+
+They are not backend helper functions hidden from the model.
+
 The backend owns the available REST APIs and A2A connections.
 
 The frontend does not receive or manage that list.
@@ -345,18 +360,50 @@ The system prompt contains a static list of available APIs and A2A endpoints,
 based on backend configuration data, and references to their OpenAPI
 documentation where applicable.
 
-The prompt must make it explicit that:
+The agent is responsible for:
 
-- the agent is responsible for deciding which API to inspect
-- the agent is responsible for selecting which endpoint to call
-- the agent is responsible for choosing query/body values from case context
-- the backend must not hardcode those choices in domain-specific discovery code
+- deciding which API to inspect
+- selecting which endpoint to call
+- choosing query/body values from case context
+- deciding which processes are relevant
+- generating `ag-ui` forms for unavailable information or undetermined user
+  choices
 
-### Generic REST tools
+The backend must not hardcode those choices in domain-specific discovery code.
 
-There should be two generic REST tools.
+### Required OpenAI Tools
+
+The intake discovery agent should have exactly these tool categories available.
+
+#### `emit_progress`
+
+This is a tool.
+
+Input:
+
+- `message`
+
+Behavior:
+
+- emits a concrete user-facing progress line for the SSE log
+
+Purpose:
+
+- progress becomes part of the actual agent run
+- the model can report meaningful operational steps like RDW, SVB, CAK, or
+  Belastingdienst checks
+- progress structure lives in a tool, not only in free-form streamed text
+
+Notes:
+
+- messages should be concrete and operational
+- messages should mention the source or organisation where possible
+- generic messages like `Discovery gestart` or `Relevante processen bepalen`
+  should be avoided
 
 #### `discover_api`
+
+This is a tool.
 
 Input:
 
@@ -372,6 +419,8 @@ Purpose:
   response formats before selecting an endpoint
 
 #### `call_api`
+
+This is a tool.
 
 Input:
 
@@ -390,11 +439,14 @@ Purpose:
 - the agent must decide the concrete operation; `call_api` must not hide
   domain-specific endpoint selection in backend code
 
-### A2A tool
-
-There should be one generic A2A tool.
-
 #### `call_a2a_agent`
+
+This is a tool.
+
+Input:
+
+- `agent`
+- `input`
 
 Behavior:
 
@@ -408,6 +460,104 @@ Notes:
 - this should not introduce a parallel A2A implementation path if the existing
   client logic can be reused directly
 - the current primary use case is fetching Belastingdienst letters
+
+#### `register_process`
+
+This is a tool.
+
+Input:
+
+- one complete relevant process object
+
+Behavior:
+
+- registers a relevant process in a schema-controlled structure
+
+Purpose:
+
+- the process structure is enforced by tool schema rather than long prompt text
+- the agent uses this tool to output every relevant process
+- irrelevant processes are omitted and therefore never registered
+
+Notes:
+
+- the JSON schema for this tool should define fields like:
+  - `id`
+  - `organisation`
+  - `title`
+  - `summary`
+  - `state`
+  - `handled_by`
+  - `deadline`
+  - `urgent`
+  - `blocked_reason`
+  - `available_from`
+  - `reason`
+  - `evidence`
+  - `form`
+- field notes and invariants should live in the tool schema
+- `deadline` xor `urgent` should be enforced in the schema and in backend
+  validation
+
+#### `set_user_info`
+
+This is a tool.
+
+Input:
+
+- one complete user/case information object for the base intake information
+
+Behavior:
+
+- registers the basic user and case information that should appear in the UI
+
+Purpose:
+
+- the agent establishes the base case information before process registration
+- this keeps user info as structured output in a schema-controlled tool
+- the backend does not need to infer or hand-assemble the base information
+
+Notes:
+
+- this should be called before `register_process`
+- backend validation may reject process registration until user info has been
+  set
+- this tool should cover the basic information already shown in the UI and any
+  additional immediately relevant case data the product wants to display
+
+#### `complete_discovery`
+
+This is a tool.
+
+Input:
+
+- optional summary metadata such as counts
+
+Behavior:
+
+- indicates that the agent has finished discovery and process registration
+
+Purpose:
+
+- gives a clean explicit end state to the agent run
+- makes the backend less dependent on ad hoc final text output
+
+### Tool Principles
+
+- tool registration happens in the OpenAI client call
+- tool schemas define structure
+- prompts define intent, not object shape minutiae
+- the agent decides which tools to call and in what order
+- the backend executes the tools and validates results
+- the backend must not silently replace missing tool use with hardcoded logic
+- the expected high-level sequence is:
+  - determine base information
+  - call `set_user_info`
+  - determine relevant processes
+  - call `register_process` for each relevant process
+  - call `complete_discovery`
+- this is still one agent run, not multiple staged prompts or scripted backend
+  phases
 
 ## REST APIs in Scope
 
@@ -448,6 +598,24 @@ Recommended implementation direction:
 - surface tool-use progress and short natural-language status lines from the
   actual agent run
 - do not simulate progress with scripted backend messages
+
+### Orchestration Loop
+
+The backend should use a ReAct-style loop.
+
+Each model turn receives:
+
+- the concise system prompt
+- the original runtime user prompt
+- compact working memory
+- recent observations from previous actions
+
+The backend should not keep appending every previous raw assistant/tool message
+to one ever-growing chat transcript. Tool results should become observations in
+the working memory for the next action decision.
+
+This keeps the agent in control of reasoning and acting while avoiding a noisy
+conversation history that grows with every API call.
 
 Recommended event types:
 
@@ -645,42 +813,98 @@ Examples:
 This information should be included in the final response in a backend-friendly
 English structure and then mapped to the existing UI fields where needed.
 
-## System Prompt Responsibilities
+## Prompt Design
 
-The new endpoint should use a new system prompt.
+The prompt should stay concise.
 
-It should not reuse the Belastingdienst-only prompt as-is.
+Structure and field details should live in tool schemas, not in a giant prompt
+with overlapping rules.
 
-The new system prompt should instruct the agent to:
+### System Prompt
 
-- start from the deceased BSN
-- gather general information first
-- inspect the predefined process list
-- add configured always-include processes where applicable
-- determine only relevant fixed processes
-- retrieve Belastingdienst letters through A2A
-- derive additional relevant dynamic processes from those letters
-- generate process-level form definitions when required information is missing
-- emit those process forms in an `ag-ui`-compatible structure
-- use the generic REST and A2A tools, not imagined tools
-- explain progress in short operational steps
-- return structured output that is already semantically correct, with backend
-  validation limited to schema and invariant enforcement
+The new endpoint should use a short dedicated system prompt.
 
-The prompt should also make explicit that:
+Suggested system prompt:
 
-- if a process needs user input, the agent should generate the required
-  `ag-ui` form itself
-- the backend will not supply hardcoded per-process forms
-- newly added APIs or processes should not require new backend form-building
-  code
+```text
+You determine which processes are relevant for a deceased person’s case.
 
-The prompt should also list:
+You will receive:
+- current known case information
+- a list of possible processes
+- available REST APIs with their OpenAPI endpoints
+- available agent-to-agent endpoints
 
-- which APIs exist
-- where their OpenAPI docs can be found
-- which A2A connection exists
-- key invariants such as the `deadline` xor `urgent` rule
+Your job:
+- determine the basic case information first and register it through the user-info tool
+- determine which processes are relevant and which are irrelevant
+- use the available APIs to gather the information needed to decide that
+- retrieve Belastingdienst letters through the available A2A endpoint and use them to determine additional processes
+- match required data for handling a process against:
+  - the provided case data
+  - data available from the APIs
+- when information or user choices cannot be determined automatically, generate an ag-ui form
+- register every relevant process through tool calls
+
+Do not invent APIs, endpoints, fields, processes, or facts.
+Use the available tools.
+```
+
+The system prompt should also contain:
+
+- the configured API registry, including OpenAPI URLs
+- the configured A2A registry
+
+The system prompt should not contain:
+
+- long field-by-field process schemas
+- hardcoded endpoint instructions for each organisation
+- implementation details about backend mistakes or fallback behavior
+
+### User Prompt
+
+The user prompt is the runtime discovery payload.
+
+Suggested user prompt:
+
+```text
+Current case information:
+{known_case_information}
+
+Possible processes:
+{possible_processes}
+
+Determine which processes are relevant for this case.
+Use the available APIs and A2A endpoint(s).
+Determine the base user/case information first.
+Register that information through the user-info tool.
+Register each relevant process with tool calls.
+If required information or a user choice is missing and cannot be determined automatically, generate an ag-ui form.
+```
+
+The user prompt should contain:
+
+- current known information about the user/case
+- the free-form list of available processes
+
+The user prompt may include generic processes such as:
+
+- address check against organisation-known address
+
+Such generic processes may result in multiple concrete relevant processes across
+different organisations.
+
+### Prompt Responsibilities
+
+The prompt tells the agent:
+
+- what its job is
+- what information it receives
+- what APIs and A2A endpoints exist
+- that it must use tools
+
+The prompt does not define the response structure in prose. Tool schemas do
+that.
 
 ## Validation Responsibilities
 
@@ -698,6 +922,7 @@ Instead:
 Validation should enforce:
 
 - English field names
+- `set_user_info` must be called before any process registration
 - `state` in the allowed enum
 - `handled_by` in `you | us`
 - `deadline` and `urgent` mutual exclusion
@@ -707,6 +932,7 @@ Validation should enforce:
 - merging submitted process-form data into reusable case data
 
 Validation must not expand into manual backend form generation.
+Validation must not expand into manual backend process derivation either.
 
 ## New Endpoint
 
@@ -718,7 +944,7 @@ This endpoint:
 
 - accepts the deceased BSN and assistance preference
 - starts an SSE stream immediately
-- runs discovery and normalization
+- runs agent-driven discovery
 - emits progress and final result
 
 Possible request body:
@@ -902,6 +1128,8 @@ The intended onboarding interaction becomes:
   - `backend/reconciliation/intake_discovery.py`
 - add a new prompt module, for example:
   - `backend/reconciliation/intake_prompt.py`
+- add explicit OpenAI tool definitions, for example:
+  - `backend/reconciliation/intake_tools.py`
 - add generic REST OpenAPI discovery and execution helpers, for example:
   - `backend/reconciliation/api_tools.py`
 - reuse or wrap
@@ -971,15 +1199,17 @@ validation may reject obviously duplicated output.
 1. add backend route and SSE view skeleton
 2. implement event streaming helper
 3. add JSON API/A2A/process registries
-4. implement generic `call_api`
-5. reuse A2A client logic for Belastingdienst calls
-6. implement new system prompt and orchestration loop
-7. implement OpenAI streaming plus validation and invariants
-8. rework the `agentPlan` onboarding step into a streamed progress log
-9. remove the separate reconciliation widget and fold that work into normal
-   process rendering
-10. add generated process-form support and reusable case-data persistence
-11. wire final result to the existing frontend overview shape
+4. implement OpenAI tool definitions
+5. implement generic `discover_api` and `call_api`
+6. reuse A2A client logic for Belastingdienst calls
+7. implement `set_user_info` plus `register_process` result collection
+8. implement new system prompt, user prompt builder, and orchestration loop
+9. implement OpenAI streaming plus validation and invariants
+10. rework the `agentPlan` onboarding step into a streamed progress log
+11. remove the separate reconciliation widget and fold that work into normal
+    process rendering
+12. add generated process-form support and reusable case-data persistence
+13. wire final result to the existing frontend overview shape
 
 ## Success Criteria
 
@@ -992,9 +1222,12 @@ The implementation is successful when:
   generic discovery placeholders
 - the `Verder` button stays disabled until discovery completes
 - the agent discovers general case information
+- the agent sets the basic user/case information through `set_user_info`
 - the agent returns only relevant fixed processes
 - the agent includes configured always-include processes where intended
 - the agent adds relevant dynamic Belastingdienst-derived processes
+- the agent registers relevant processes through actual tool calls
+- the agent generates `ag-ui` forms through actual tool calls when needed
 - missing process data can be returned as process-scoped form definitions
 - submitted process form data can be reused in later steps
 - each returned process uses the English backend contract
