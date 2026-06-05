@@ -27,25 +27,14 @@ const OPTIONS: {
   },
   {
     assistance: 'none',
-    title: 'Ik regel het liever zelf',
-    summary: 'U ziet alles en voert stappen zelf uit. Wij tonen vooral informatie.',
+    title: 'Ik houd zelf de regie',
+    summary: 'U ziet wat er moet gebeuren en kiest zelf welke stappen u zet. Wij helpen met overzicht en uitleg.',
     bullets: [
-      'Alle taken en brieven zijn zichtbaar',
-      'Wij doen niks op de achtergrond',
-      'U heeft altijd volledige controle',
+      'U beslist zelf wat er gebeurt',
+      'Wij doen niets zonder uw bevestiging',
+      'U kunt later alsnog meer hulp kiezen',
     ],
-    hint: 'Geschikt als u elk detail zelf wilt beoordelen.',
-  },
-  {
-    assistance: 'partial',
-    title: 'Ik kies per taak',
-    summary: 'Bepaal per taak of u het zelf regelt of hulp wilt.',
-    bullets: [
-      'Wij doen niks vanzelf op de achtergrond',
-      'U heeft volledige controle',
-      'U kunt per taak controle uit handen geven',
-    ],
-    hint: 'Geschikt als u sommige stappen zelf wilt doen, en andere niet.',
+    hint: 'Geschikt als u zelf wilt bepalen wat er gebeurt, met hulp waar nodig.',
   },
 ];
 
